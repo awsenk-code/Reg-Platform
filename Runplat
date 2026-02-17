@@ -1,0 +1,2866 @@
+<!DOCTYPE html>
+
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PharmaComply — Pharmaceutical Regulatory Intelligence Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+ :root {
+   --bg: #080f1a;
+   --surface: #0e1929;
+   --surface2: #131f30;
+   --surface3: #192638;
+   --gold: #b8922a;
+   --gold-light: #d4a93c;
+   --gold-bright: #f0c35e;
+   --teal: #2a8b8b;
+   --teal-light: #3aadad;
+   --red: #c04040;
+   --green: #2a8b5a;
+   --green-light: #38b578;
+   --amber: #b87a20;
+   --text: #d8e4f0;
+   --text-muted: #6a82a0;
+   --text-dim: #3a4f6a;
+   --border: rgba(184,146,42,0.15);
+   --border-soft: rgba(255,255,255,0.05);
+   --glow: rgba(184,146,42,0.08);
+   --radius: 10px;
+ }
+
+- { margin: 0; padding: 0; box-sizing: border-box; }
+ html { scroll-behavior: smooth; }
+
+body {
+background: var(–bg);
+color: var(–text);
+font-family: ‘Inter’, sans-serif;
+font-size: 13.5px;
+line-height: 1.6;
+overflow-x: hidden;
+}
+
+body::before {
+content: ‘’;
+position: fixed; inset: 0; pointer-events: none; z-index: 0;
+background:
+radial-gradient(ellipse 70% 50% at 15% 0%, rgba(184,146,42,0.06) 0%, transparent 55%),
+radial-gradient(ellipse 50% 70% at 85% 100%, rgba(42,139,139,0.05) 0%, transparent 55%),
+repeating-linear-gradient(0deg, transparent, transparent 40px, rgba(255,255,255,0.008) 40px, rgba(255,255,255,0.008) 41px),
+repeating-linear-gradient(90deg, transparent, transparent 40px, rgba(255,255,255,0.008) 40px, rgba(255,255,255,0.008) 41px);
+}
+
+/* ===== SIDEBAR ===== */
+.sidebar {
+position: fixed; left: 0; top: 0; bottom: 0; width: 248px;
+background: var(–surface);
+border-right: 1px solid var(–border);
+display: flex; flex-direction: column;
+z-index: 100;
+}
+
+.sidebar-logo {
+padding: 26px 22px 20px;
+border-bottom: 1px solid var(–border);
+}
+.logo-icon {
+width: 38px; height: 38px;
+background: linear-gradient(135deg, var(–gold), var(–gold-light));
+border-radius: 9px;
+display: flex; align-items: center; justify-content: center;
+font-size: 18px; margin-bottom: 10px;
+box-shadow: 0 4px 16px rgba(184,146,42,0.3);
+}
+.logo-name {
+font-family: ‘Cormorant Garamond’, serif;
+font-size: 21px; font-weight: 700;
+color: var(–gold-bright);
+letter-spacing: 0.3px;
+}
+.logo-sub {
+font-size: 9.5px; color: var(–text-muted);
+text-transform: uppercase; letter-spacing: 2.5px;
+margin-top: 1px;
+}
+
+.nav-group { padding: 14px 12px 6px; }
+.nav-group-label {
+font-size: 9px; font-weight: 600;
+color: var(–text-dim); text-transform: uppercase;
+letter-spacing: 2px; padding: 0 8px; margin-bottom: 5px;
+}
+
+.nav-item {
+display: flex; align-items: center; gap: 9px;
+padding: 9px 10px; border-radius: 7px;
+cursor: pointer; transition: all 0.18s;
+color: var(–text-muted); font-size: 13px; font-weight: 500;
+margin-bottom: 1px; position: relative;
+border: 1px solid transparent;
+}
+.nav-item:hover { background: rgba(255,255,255,0.04); color: var(–text); }
+.nav-item.active {
+background: var(–glow);
+color: var(–gold-light);
+border-color: var(–border);
+}
+.nav-item.active::before {
+content: ‘’; position: absolute; left: 0; top: 50%;
+transform: translateY(-50%);
+width: 3px; height: 18px; border-radius: 2px;
+background: var(–gold);
+}
+.nav-icon { font-size: 14px; width: 18px; text-align: center; opacity: 0.85; }
+.nav-badge {
+margin-left: auto; background: var(–red);
+color: #fff; font-size: 9px; font-weight: 700;
+padding: 2px 5px; border-radius: 8px; letter-spacing: 0.3px;
+}
+.nav-badge-gold {
+margin-left: auto; background: rgba(184,146,42,0.2);
+color: var(–gold-light); font-size: 9px; font-weight: 700;
+padding: 2px 6px; border-radius: 8px;
+}
+
+.sidebar-bottom {
+margin-top: auto;
+border-top: 1px solid var(–border);
+padding: 14px 16px;
+}
+.user-row { display: flex; align-items: center; gap: 10px; }
+.user-av {
+width: 32px; height: 32px; border-radius: 50%;
+background: linear-gradient(135deg, var(–gold), var(–teal));
+display: flex; align-items: center; justify-content: center;
+font-size: 12px; font-weight: 700; color: var(–bg); flex-shrink: 0;
+}
+.user-name { font-size: 12.5px; font-weight: 600; color: var(–text); }
+.user-role { font-size: 10.5px; color: var(–text-muted); }
+
+/* ===== MAIN ===== */
+.main { margin-left: 248px; position: relative; z-index: 1; min-height: 100vh; }
+
+/* ===== TOPBAR ===== */
+.topbar {
+height: 58px;
+background: rgba(8,15,26,0.92);
+backdrop-filter: blur(16px);
+border-bottom: 1px solid var(–border-soft);
+display: flex; align-items: center;
+padding: 0 28px; gap: 14px;
+position: sticky; top: 0; z-index: 50;
+}
+.topbar-title {
+font-family: ‘Cormorant Garamond’, serif;
+font-size: 18px; font-weight: 600; color: var(–text);
+letter-spacing: 0.2px;
+}
+.topbar-sep { color: var(–text-dim); margin: 0 2px; }
+
+.search-wrap {
+margin-left: auto;
+display: flex; align-items: center; gap: 7px;
+background: var(–surface2);
+border: 1px solid var(–border-soft);
+border-radius: 8px; padding: 6px 13px;
+width: 240px; transition: border-color 0.2s;
+}
+.search-wrap:focus-within { border-color: var(–border); }
+.search-wrap input {
+background: none; border: none; outline: none;
+color: var(–text); font-size: 12.5px;
+font-family: ‘Inter’, sans-serif; width: 100%;
+}
+.search-wrap input::placeholder { color: var(–text-dim); }
+
+.topbar-tag {
+background: rgba(42,139,139,0.15);
+color: var(–teal-light); font-size: 10px; font-weight: 600;
+padding: 3px 8px; border-radius: 5px;
+text-transform: uppercase; letter-spacing: 1px;
+}
+
+/* ===== CONTENT ===== */
+.content { padding: 26px 28px; }
+.page { display: none; }
+.page.active { display: block; }
+
+/* ===== DASHBOARD ===== */
+.kpi-row {
+display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px;
+margin-bottom: 22px;
+}
+.kpi {
+background: var(–surface2);
+border: 1px solid var(–border-soft);
+border-radius: var(–radius);
+padding: 16px 18px;
+transition: border-color 0.2s;
+position: relative; overflow: hidden;
+}
+.kpi::after {
+content: ‘’;
+position: absolute; top: 0; left: 0; right: 0; height: 2px;
+background: linear-gradient(90deg, var(–gold), transparent);
+opacity: 0;
+transition: opacity 0.2s;
+}
+.kpi:hover { border-color: var(–border); }
+.kpi:hover::after { opacity: 1; }
+.kpi-label { font-size: 10px; color: var(–text-muted); text-transform: uppercase; letter-spacing: 1.5px; font-weight: 500; }
+.kpi-value {
+font-family: ‘Cormorant Garamond’, serif;
+font-size: 30px; font-weight: 700; color: var(–gold-bright);
+line-height: 1.1; margin: 5px 0 2px;
+}
+.kpi-sub { font-size: 11px; color: var(–text-muted); }
+
+/* ===== GRID ===== */
+.g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.g3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; }
+
+/* ===== SECTION HEADER ===== */
+.sh {
+display: flex; align-items: center; justify-content: space-between;
+margin-bottom: 14px;
+}
+.sh-title {
+font-family: ‘Cormorant Garamond’, serif;
+font-size: 17px; font-weight: 600; color: var(–text);
+display: flex; align-items: baseline; gap: 8px;
+}
+.sh-title span { color: var(–gold); }
+.sh-title small { font-family: ‘Inter’, sans-serif; font-size: 11px; color: var(–text-muted); font-weight: 400; }
+
+/* ===== BUTTONS ===== */
+.btn {
+padding: 7px 16px; border-radius: 7px; border: none;
+font-family: ‘Inter’, sans-serif; font-size: 12px; font-weight: 600;
+cursor: pointer; transition: all 0.18s; letter-spacing: 0.2px;
+}
+.btn-gold { background: var(–gold); color: var(–bg); }
+.btn-gold:hover { background: var(–gold-light); }
+.btn-ghost { background: transparent; color: var(–gold); border: 1px solid var(–border); }
+.btn-ghost:hover { background: var(–glow); }
+.btn-sm { padding: 5px 11px; font-size: 11px; }
+
+/* ===== CARDS ===== */
+.card {
+background: var(–surface2);
+border: 1px solid var(–border-soft);
+border-radius: var(–radius);
+}
+.card-hd {
+padding: 15px 18px;
+border-bottom: 1px solid var(–border-soft);
+display: flex; align-items: center; justify-content: space-between;
+}
+.card-title { font-size: 13px; font-weight: 600; color: var(–text); }
+.card-bd { padding: 16px 18px; }
+
+/* ===== STATUS PILLS ===== */
+.pill {
+font-size: 10px; font-weight: 600; padding: 2px 8px;
+border-radius: 5px; letter-spacing: 0.5px; text-transform: uppercase;
+display: inline-flex; align-items: center; gap: 4px;
+}
+.pill-green { background: rgba(42,139,90,0.18); color: var(–green-light); }
+.pill-amber { background: rgba(184,122,32,0.18); color: #e8a840; }
+.pill-red { background: rgba(192,64,64,0.18); color: #e06060; }
+.pill-teal { background: rgba(42,139,139,0.18); color: var(–teal-light); }
+.pill-gold { background: rgba(184,146,42,0.18); color: var(–gold-bright); }
+
+/* ===== COUNTRY CARDS ===== */
+.country-grid {
+display: grid;
+grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+gap: 14px;
+}
+.cc {
+background: var(–surface2);
+border: 1px solid var(–border-soft);
+border-radius: var(–radius);
+padding: 18px 18px 16px;
+cursor: pointer;
+transition: all 0.22s;
+position: relative; overflow: hidden;
+}
+.cc::before {
+content: ‘’; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+border-radius: 2px 0 0 2px;
+transition: opacity 0.2s;
+opacity: 0;
+}
+.cc.s-active::before { background: var(–green-light); opacity: 1; }
+.cc.s-review::before { background: #e8a840; opacity: 1; }
+.cc.s-planned::before { background: var(–text-muted); opacity: 1; }
+.cc:hover { border-color: var(–border); transform: translateY(-2px); box-shadow: 0 8px 28px rgba(0,0,0,0.4); }
+
+.cc-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 10px; }
+.cc-flag { font-size: 28px; }
+.cc-name { font-family: ‘Cormorant Garamond’, serif; font-size: 16px; font-weight: 700; color: var(–text); }
+.cc-sub { font-size: 11px; color: var(–text-muted); margin-bottom: 10px; }
+.cc-tags { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 10px; }
+.tag {
+font-size: 9.5px; padding: 2px 7px; border-radius: 4px;
+font-weight: 600; letter-spacing: 0.5px;
+}
+.tag-green { background: rgba(42,139,90,0.15); color: var(–green-light); }
+.tag-gold { background: rgba(184,146,42,0.15); color: var(–gold-bright); }
+.tag-teal { background: rgba(42,139,139,0.15); color: var(–teal-light); }
+.tag-red { background: rgba(192,64,64,0.15); color: #e06060; }
+.tag-blue { background: rgba(60,100,200,0.15); color: #7aadff; }
+
+.cc-foot {
+display: flex; align-items: center; justify-content: space-between;
+font-size: 11px; color: var(–text-muted);
+padding-top: 10px; border-top: 1px solid var(–border-soft);
+}
+
+/* ===== DOT ===== */
+.dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.dot-green { background: var(–green-light); box-shadow: 0 0 6px var(–green-light); }
+.dot-amber { background: #e8a840; box-shadow: 0 0 6px #e8a840; }
+.dot-grey { background: var(–text-muted); }
+
+/* ===== DETAIL PANEL ===== */
+.overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 150; backdrop-filter: blur(4px); }
+.overlay.open { display: block; }
+
+.detail {
+display: none; position: fixed; right: 0; top: 0; bottom: 0; width: 540px;
+background: var(–surface);
+border-left: 1px solid var(–border);
+z-index: 200; overflow-y: auto;
+animation: slideIn 0.28s cubic-bezier(.4,0,.2,1);
+}
+.detail.open { display: block; }
+@keyframes slideIn { from { transform: translateX(100%); opacity: 0.5; } to { transform: translateX(0); opacity: 1; } }
+
+.dp-head {
+padding: 26px 26px 20px;
+border-bottom: 1px solid var(–border);
+position: sticky; top: 0;
+background: var(–surface); z-index: 1;
+}
+.dp-close {
+position: absolute; right: 18px; top: 18px;
+width: 28px; height: 28px; border-radius: 50%;
+background: var(–surface3); border: 1px solid var(–border-soft);
+color: var(–text-muted); cursor: pointer; font-size: 14px;
+display: flex; align-items: center; justify-content: center;
+transition: all 0.15s;
+}
+.dp-close:hover { color: var(–text); border-color: var(–border); }
+
+.dp-body { padding: 22px 26px; }
+.dp-section { margin-bottom: 22px; }
+.dp-section-title {
+font-size: 9.5px; font-weight: 600;
+text-transform: uppercase; letter-spacing: 2px;
+color: var(–gold); margin-bottom: 10px;
+display: flex; align-items: center; gap: 7px;
+}
+.dp-section-title::after {
+content: ‘’; flex: 1; height: 1px; background: var(–border);
+}
+
+.law-item {
+background: var(–surface3);
+border: 1px solid var(–border-soft);
+border-radius: 8px; padding: 13px 15px;
+margin-bottom: 8px;
+transition: border-color 0.15s;
+}
+.law-item:hover { border-color: var(–border); }
+.law-name { font-size: 12.5px; font-weight: 600; color: var(–text); margin-bottom: 3px; }
+.law-cat { font-size: 10px; color: var(–gold); font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 5px; }
+.law-desc { font-size: 11.5px; color: var(–text-muted); line-height: 1.55; }
+.law-link {
+display: inline-flex; align-items: center; gap: 4px;
+font-size: 10.5px; color: var(–teal-light); margin-top: 7px;
+cursor: pointer; text-decoration: none; transition: color 0.15s;
+}
+.law-link:hover { color: #60d0d0; }
+
+.contact-row {
+display: flex; align-items: flex-start; gap: 11px;
+background: var(–surface3);
+border: 1px solid var(–border-soft);
+border-radius: 8px; padding: 12px 14px;
+margin-bottom: 8px;
+}
+.c-av {
+width: 36px; height: 36px; border-radius: 50%;
+background: var(–surface2); border: 1px solid var(–border);
+display: flex; align-items: center; justify-content: center;
+font-size: 15px; flex-shrink: 0;
+}
+.c-name { font-size: 12.5px; font-weight: 600; color: var(–text); }
+.c-role { font-size: 10.5px; color: var(–gold); margin-bottom: 3px; }
+.c-info { font-size: 11px; color: var(–text-muted); }
+
+/* ===== PROCESS STEPS ===== */
+.process-steps { display: flex; flex-direction: column; gap: 0; }
+.step {
+display: flex; gap: 14px;
+padding-bottom: 16px;
+position: relative;
+}
+.step:last-child { padding-bottom: 0; }
+.step-num {
+width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
+display: flex; align-items: center; justify-content: center;
+font-size: 11px; font-weight: 700; color: var(–bg);
+background: var(–gold); z-index: 1;
+box-shadow: 0 0 0 3px var(–surface2);
+}
+.step:not(:last-child) .step-num::after {
+content: ‘’; position: absolute;
+left: 13px; top: 28px; width: 2px;
+bottom: 0;
+background: linear-gradient(to bottom, var(–border), transparent);
+}
+.step-content { flex: 1; }
+.step-title { font-size: 12.5px; font-weight: 600; color: var(–text); margin-bottom: 3px; }
+.step-desc { font-size: 11.5px; color: var(–text-muted); line-height: 1.5; }
+
+/* ===== TABLE ===== */
+.tbl { width: 100%; border-collapse: collapse; }
+.tbl th {
+text-align: left; font-size: 10px; text-transform: uppercase;
+letter-spacing: 1.5px; color: var(–text-muted); font-weight: 600;
+padding: 8px 13px; border-bottom: 1px solid var(–border-soft);
+}
+.tbl td {
+padding: 10px 13px;
+border-bottom: 1px solid rgba(255,255,255,0.03);
+font-size: 12.5px; color: var(–text); vertical-align: middle;
+}
+.tbl tr:hover td { background: rgba(255,255,255,0.02); cursor: pointer; }
+.tbl tr:last-child td { border-bottom: none; }
+
+/* ===== AI AGENT ===== */
+.ai-wrap { display: flex; gap: 18px; height: calc(100vh - 136px); }
+
+.ai-sidebar {
+width: 240px; flex-shrink: 0;
+display: flex; flex-direction: column; gap: 10px;
+overflow-y: auto;
+}
+
+.ai-panel {
+flex: 1;
+background: var(–surface2);
+border: 1px solid var(–border-soft);
+border-radius: var(–radius);
+display: flex; flex-direction: column;
+overflow: hidden;
+}
+
+.ai-head {
+padding: 14px 18px;
+border-bottom: 1px solid var(–border-soft);
+display: flex; align-items: center; gap: 12px;
+background: var(–surface3);
+}
+.ai-av-main {
+width: 38px; height: 38px; border-radius: 50%;
+background: linear-gradient(135deg, var(–gold), var(–teal));
+display: flex; align-items: center; justify-content: center;
+font-size: 17px; flex-shrink: 0;
+box-shadow: 0 0 16px rgba(184,146,42,0.25);
+}
+.ai-name-main { font-size: 14px; font-weight: 600; color: var(–text); }
+.ai-status-line { font-size: 10px; color: var(–green-light); display: flex; align-items: center; gap: 5px; }
+
+.chat-area {
+flex: 1; overflow-y: auto; padding: 18px;
+display: flex; flex-direction: column; gap: 14px;
+}
+.msg { display: flex; gap: 9px; max-width: 88%; }
+.msg.user { margin-left: auto; flex-direction: row-reverse; }
+.msg-av {
+width: 28px; height: 28px; border-radius: 50%;
+display: flex; align-items: center; justify-content: center;
+font-size: 12px; flex-shrink: 0; margin-top: 2px;
+}
+.msg-av.ai-type { background: linear-gradient(135deg, var(–gold), var(–teal)); color: var(–bg); font-size: 14px; }
+.msg-av.user-type { background: rgba(42,139,139,0.25); color: var(–teal-light); font-weight: 700; font-size: 10px; }
+.msg-bubble {
+padding: 10px 14px; border-radius: 10px;
+font-size: 12.5px; line-height: 1.6;
+}
+.msg.ai .msg-bubble {
+background: var(–surface3);
+border: 1px solid var(–border-soft);
+border-top-left-radius: 3px; color: var(–text);
+}
+.msg.user .msg-bubble {
+background: rgba(184,146,42,0.1);
+border: 1px solid rgba(184,146,42,0.2);
+border-top-right-radius: 3px; color: var(–text);
+}
+.msg-bubble strong { color: var(–gold-bright); }
+.msg-bubble .law-ref {
+background: rgba(42,139,139,0.12);
+border: 1px solid rgba(42,139,139,0.2);
+border-radius: 5px; padding: 6px 10px; margin-top: 6px;
+font-size: 11px; color: var(–teal-light);
+}
+
+.chat-input-area {
+padding: 14px 16px;
+border-top: 1px solid var(–border-soft);
+display: flex; gap: 9px; align-items: flex-end;
+}
+.chat-in {
+flex: 1; background: var(–surface3);
+border: 1px solid var(–border-soft);
+border-radius: 8px; padding: 9px 13px;
+color: var(–text); font-family: ‘Inter’, sans-serif; font-size: 12.5px;
+outline: none; resize: none; line-height: 1.5;
+max-height: 110px; transition: border-color 0.18s;
+}
+.chat-in:focus { border-color: var(–border); }
+.chat-in::placeholder { color: var(–text-dim); }
+.send-btn {
+width: 38px; height: 38px; border-radius: 8px;
+background: var(–gold); border: none; color: var(–bg);
+font-size: 15px; cursor: pointer; flex-shrink: 0;
+display: flex; align-items: center; justify-content: center;
+transition: all 0.18s;
+}
+.send-btn:hover { background: var(–gold-light); }
+.send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.chips-row { display: flex; flex-wrap: wrap; gap: 5px; padding: 0 16px 8px; }
+.chip {
+background: var(–surface3); border: 1px solid var(–border-soft);
+border-radius: 15px; padding: 4px 10px;
+font-size: 10.5px; color: var(–text-muted); cursor: pointer;
+transition: all 0.15s;
+}
+.chip:hover { border-color: var(–border); color: var(–gold); }
+
+.typing { display: flex; gap: 4px; align-items: center; }
+.typing-dot {
+width: 5px; height: 5px; border-radius: 50%; background: var(–text-muted);
+animation: tb 1.2s infinite;
+}
+.typing-dot:nth-child(2) { animation-delay: .2s; }
+.typing-dot:nth-child(3) { animation-delay: .4s; }
+@keyframes tb { 0%,100%{transform:translateY(0);opacity:.4;} 50%{transform:translateY(-4px);opacity:1;} }
+
+.info-box {
+background: var(–surface2); border: 1px solid var(–border-soft);
+border-radius: var(–radius); padding: 14px;
+font-size: 12px;
+}
+.ib-title { font-size: 9.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 2px; color: var(–gold); margin-bottom: 8px; }
+.ib-item {
+display: flex; align-items: center; gap: 7px;
+color: var(–text-muted); padding: 5px 0;
+border-bottom: 1px solid rgba(255,255,255,0.03);
+cursor: pointer; transition: color 0.15s; font-size: 11.5px;
+}
+.ib-item:last-child { border-bottom: none; }
+.ib-item:hover { color: var(–text); }
+
+/* ===== CONTACTS ===== */
+.contacts-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 14px; }
+.contact-card {
+background: var(–surface2); border: 1px solid var(–border-soft);
+border-radius: var(–radius); padding: 18px;
+transition: border-color 0.2s;
+}
+.contact-card:hover { border-color: var(–border); }
+.c-card-av {
+width: 46px; height: 46px; border-radius: 50%;
+background: var(–surface3); border: 1px solid var(–border);
+display: flex; align-items: center; justify-content: center;
+font-size: 20px; margin-bottom: 12px;
+}
+.c-card-name { font-size: 14px; font-weight: 600; color: var(–text); margin-bottom: 2px; }
+.c-card-role { font-size: 11px; color: var(–gold); font-weight: 600; margin-bottom: 3px; }
+.c-card-org { font-size: 11px; color: var(–text-muted); margin-bottom: 12px; }
+.c-card-fields { display: flex; flex-direction: column; gap: 5px; }
+.c-field { font-size: 11.5px; color: var(–text-muted); display: flex; align-items: center; gap: 7px; }
+.c-field a { color: var(–teal-light); text-decoration: none; }
+
+/* ===== UPDATES ===== */
+.update-card {
+background: var(–surface2); border: 1px solid var(–border-soft);
+border-radius: var(–radius); margin-bottom: 14px; overflow: hidden;
+transition: border-color 0.2s;
+}
+.update-card:hover { border-color: var(–border); }
+.update-head {
+display: flex; align-items: flex-start; justify-content: space-between;
+padding: 16px 18px; gap: 14px;
+}
+.update-body { padding: 0 18px 16px; }
+.update-meta { font-size: 10.5px; color: var(–text-muted); margin-bottom: 4px; }
+.update-title { font-size: 13.5px; font-weight: 600; color: var(–text); }
+.update-desc { font-size: 12px; color: var(–text-muted); line-height: 1.6; margin-bottom: 10px; }
+
+/* ===== TIMELINE ===== */
+.timeline { padding-left: 18px; position: relative; }
+.timeline::before {
+content: ‘’; position: absolute; left: 5px; top: 5px; bottom: 5px;
+width: 2px; background: linear-gradient(to bottom, var(–border), transparent);
+}
+.tl-item { position: relative; margin-bottom: 14px; }
+.tl-dot {
+position: absolute; left: -15px; top: 5px;
+width: 8px; height: 8px; border-radius: 50%;
+background: var(–gold); border: 2px solid var(–surface2);
+}
+.tl-date { font-size: 10px; color: var(–text-muted); margin-bottom: 2px; font-family: ‘JetBrains Mono’, monospace; }
+.tl-text { font-size: 12px; color: var(–text); }
+
+/* ===== SCROLLBAR ===== */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(184,146,42,0.25); border-radius: 3px; }
+
+/* ===== PHARMA SPECIFIC ===== */
+.phase-bar {
+display: flex; gap: 3px; margin: 10px 0 4px;
+}
+.phase-step {
+flex: 1; height: 5px; border-radius: 3px;
+background: var(–surface3);
+transition: background 0.3s;
+}
+.phase-step.done { background: var(–green-light); }
+.phase-step.active { background: var(–gold); }
+.phase-step.next { background: var(–teal); }
+
+.warning-box {
+background: rgba(192,64,64,0.08);
+border: 1px solid rgba(192,64,64,0.2);
+border-radius: 8px; padding: 11px 14px;
+margin-bottom: 8px;
+font-size: 11.5px; color: #d08080;
+}
+.warning-box strong { color: #e06060; }
+
+.info-alert {
+background: rgba(42,139,139,0.08);
+border: 1px solid rgba(42,139,139,0.2);
+border-radius: 8px; padding: 11px 14px;
+margin-bottom: 8px; font-size: 11.5px; color: #80c0c0;
+}
+.info-alert strong { color: var(–teal-light); }
+
+/* ===== DOKUMENTE ===== */
+.doc-layout { display: flex; gap: 20px; }
+.doc-sidebar { width: 220px; flex-shrink: 0; display: flex; flex-direction: column; gap: 10px; }
+.doc-main { flex: 1; min-width: 0; }
+
+.upload-zone {
+border: 2px dashed rgba(184,146,42,0.3);
+border-radius: var(–radius);
+padding: 32px 20px;
+text-align: center;
+cursor: pointer;
+transition: all 0.22s;
+background: rgba(184,146,42,0.03);
+position: relative;
+}
+.upload-zone:hover, .upload-zone.drag-over {
+border-color: var(–gold);
+background: rgba(184,146,42,0.07);
+transform: translateY(-1px);
+}
+.upload-zone input[type=file] {
+position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+}
+.upload-icon {
+font-size: 32px; margin-bottom: 10px;
+display: block;
+filter: drop-shadow(0 0 10px rgba(184,146,42,0.3));
+}
+.upload-title { font-size: 13px; font-weight: 600; color: var(–text); margin-bottom: 4px; }
+.upload-sub { font-size: 11px; color: var(–text-muted); }
+.upload-types { display: flex; justify-content: center; gap: 5px; margin-top: 12px; flex-wrap: wrap; }
+
+.doc-filter-box { background: var(–surface2); border: 1px solid var(–border-soft); border-radius: var(–radius); padding: 14px; }
+.doc-filter-title { font-size: 9.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 2px; color: var(–gold); margin-bottom: 10px; }
+.doc-filter-item {
+display: flex; align-items: center; justify-content: space-between;
+padding: 6px 8px; border-radius: 6px; cursor: pointer;
+font-size: 12px; color: var(–text-muted); transition: all 0.15s;
+margin-bottom: 2px;
+}
+.doc-filter-item:hover { background: var(–surface3); color: var(–text); }
+.doc-filter-item.active { background: var(–glow); color: var(–gold-light); }
+.doc-filter-count {
+font-size: 10px; background: var(–surface3); padding: 1px 6px;
+border-radius: 8px; color: var(–text-muted); font-weight: 600;
+}
+
+.doc-grid { display: flex; flex-direction: column; gap: 8px; }
+.doc-item {
+background: var(–surface2); border: 1px solid var(–border-soft);
+border-radius: var(–radius); padding: 14px 16px;
+display: flex; align-items: center; gap: 14px;
+transition: all 0.18s; cursor: pointer;
+position: relative; overflow: hidden;
+}
+.doc-item::before {
+content: ‘’; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+opacity: 0; transition: opacity 0.2s;
+}
+.doc-item:hover { border-color: var(–border); transform: translateX(2px); }
+.doc-item:hover::before { opacity: 1; background: var(–gold); }
+.doc-item.cat-regulatory::before { background: var(–teal-light); }
+.doc-item.cat-audit::before { background: var(–gold); }
+.doc-item.cat-pv::before { background: var(–red); }
+.doc-item.cat-contract::before { background: var(–green-light); }
+.doc-item.cat-other::before { background: var(–text-muted); }
+.doc-item:hover::before { opacity: 1 !important; }
+
+.doc-icon-wrap {
+width: 42px; height: 42px; border-radius: 9px; flex-shrink: 0;
+display: flex; align-items: center; justify-content: center;
+font-size: 20px;
+}
+.doc-icon-pdf { background: rgba(192,64,64,0.15); }
+.doc-icon-docx { background: rgba(60,100,200,0.15); }
+.doc-icon-xlsx { background: rgba(42,139,90,0.15); }
+.doc-icon-pptx { background: rgba(184,100,40,0.15); }
+.doc-icon-other { background: var(–surface3); }
+
+.doc-info { flex: 1; min-width: 0; }
+.doc-name { font-size: 13px; font-weight: 600; color: var(–text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 3px; }
+.doc-meta { font-size: 11px; color: var(–text-muted); display: flex; gap: 10px; flex-wrap: wrap; }
+.doc-actions { display: flex; gap: 6px; opacity: 0; transition: opacity 0.15s; }
+.doc-item:hover .doc-actions { opacity: 1; }
+.doc-action-btn {
+width: 28px; height: 28px; border-radius: 6px; border: 1px solid var(–border-soft);
+background: var(–surface3); color: var(–text-muted); cursor: pointer;
+display: flex; align-items: center; justify-content: center; font-size: 13px;
+transition: all 0.15s;
+}
+.doc-action-btn:hover { border-color: var(–border); color: var(–text); }
+
+.doc-stats-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 18px; }
+.doc-stat {
+background: var(–surface2); border: 1px solid var(–border-soft);
+border-radius: var(–radius); padding: 14px 16px;
+}
+.doc-stat-val { font-family: ‘Cormorant Garamond’, serif; font-size: 26px; font-weight: 700; color: var(–gold-bright); line-height: 1; margin: 4px 0 2px; }
+.doc-stat-lbl { font-size: 10px; color: var(–text-muted); text-transform: uppercase; letter-spacing: 1.5px; }
+.doc-stat-sub { font-size: 11px; color: var(–text-muted); margin-top: 1px; }
+
+.upload-progress {
+position: fixed; bottom: 24px; right: 24px; width: 320px; z-index: 500;
+display: flex; flex-direction: column; gap: 8px;
+}
+.progress-item {
+background: var(–surface);
+border: 1px solid var(–border);
+border-radius: 10px; padding: 12px 14px;
+animation: slideUp 0.3s ease;
+}
+@keyframes slideUp { from{transform:translateY(20px);opacity:0;} to{transform:translateY(0);opacity:1;} }
+.progress-name { font-size: 12px; font-weight: 600; color: var(–text); margin-bottom: 7px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.progress-bar-wrap { height: 4px; background: var(–surface3); border-radius: 2px; overflow: hidden; }
+.progress-bar-fill { height: 100%; background: linear-gradient(90deg, var(–gold), var(–teal-light)); border-radius: 2px; transition: width 0.3s; }
+.progress-meta { font-size: 10px; color: var(–text-muted); margin-top: 5px; display: flex; justify-content: space-between; }
+
+/* ===== AUDITS ===== */
+.audit-layout { display: flex; gap: 20px; }
+.audit-sidebar { width: 260px; flex-shrink: 0; display: flex; flex-direction: column; gap: 10px; }
+.audit-main { flex: 1; min-width: 0; }
+
+.audit-card {
+background: var(–surface2); border: 1px solid var(–border-soft);
+border-radius: var(–radius); overflow: hidden;
+transition: all 0.2s; cursor: pointer;
+margin-bottom: 10px;
+}
+.audit-card:hover { border-color: var(–border); box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
+.audit-card-head {
+padding: 16px 18px;
+display: flex; align-items: flex-start; gap: 14px;
+border-bottom: 1px solid var(–border-soft);
+}
+.audit-icon {
+width: 44px; height: 44px; border-radius: 10px; flex-shrink: 0;
+display: flex; align-items: center; justify-content: center;
+font-size: 20px;
+}
+.audit-icon-internal { background: rgba(184,146,42,0.15); }
+.audit-icon-external { background: rgba(42,139,139,0.15); }
+.audit-icon-authority { background: rgba(192,64,64,0.15); }
+.audit-icon-mock { background: rgba(42,139,90,0.15); }
+
+.audit-title { font-size: 13.5px; font-weight: 600; color: var(–text); margin-bottom: 3px; }
+.audit-sub { font-size: 11px; color: var(–text-muted); margin-bottom: 6px; }
+.audit-card-body { padding: 14px 18px; }
+.audit-score-row { display: flex; align-items: center; gap: 14px; margin-bottom: 12px; }
+.audit-score-circle {
+width: 52px; height: 52px; border-radius: 50%; flex-shrink: 0;
+display: flex; align-items: center; justify-content: center;
+font-family: ‘Cormorant Garamond’, serif;
+font-size: 20px; font-weight: 700;
+border: 2px solid;
+position: relative;
+}
+.score-excellent { border-color: var(–green-light); color: var(–green-light); background: rgba(42,139,90,0.1); }
+.score-good { border-color: var(–gold); color: var(–gold-bright); background: rgba(184,146,42,0.1); }
+.score-fair { border-color: #e8a840; color: #e8a840; background: rgba(184,122,32,0.1); }
+.score-poor { border-color: var(–red); color: #e06060; background: rgba(192,64,64,0.1); }
+
+.audit-findings { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; }
+.finding {
+display: flex; align-items: flex-start; gap: 8px;
+background: var(–surface3); border-radius: 7px; padding: 8px 10px;
+font-size: 11.5px;
+}
+.finding-icon { font-size: 13px; flex-shrink: 0; margin-top: 1px; }
+.finding-text { color: var(–text-muted); flex: 1; line-height: 1.4; }
+.finding-text strong { color: var(–text); }
+.finding-sev { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; padding: 1px 5px; border-radius: 3px; margin-left: auto; flex-shrink: 0; }
+.sev-critical { background: rgba(192,64,64,0.2); color: #e06060; }
+.sev-major { background: rgba(184,122,32,0.2); color: #e8a840; }
+.sev-minor { background: rgba(42,139,90,0.15); color: var(–green-light); }
+.sev-obs { background: rgba(42,139,139,0.15); color: var(–teal-light); }
+
+.audit-footer {
+padding: 10px 18px; border-top: 1px solid var(–border-soft);
+display: flex; align-items: center; justify-content: space-between;
+background: rgba(255,255,255,0.01);
+}
+
+.audit-stats-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 18px; }
+
+.new-audit-btn {
+background: linear-gradient(135deg, var(–surface2), var(–surface3));
+border: 2px dashed rgba(184,146,42,0.3);
+border-radius: var(–radius); padding: 20px;
+text-align: center; cursor: pointer; transition: all 0.2s;
+margin-bottom: 10px;
+}
+.new-audit-btn:hover { border-color: var(–gold); background: var(–glow); }
+
+/* ===== AUDIT DETAIL MODAL ===== */
+.modal-overlay {
+display: none; position: fixed; inset: 0;
+background: rgba(0,0,0,0.7); z-index: 300;
+backdrop-filter: blur(6px);
+align-items: center; justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+background: var(–surface);
+border: 1px solid var(–border);
+border-radius: 14px; width: 680px; max-height: 85vh;
+overflow-y: auto; animation: modalIn 0.25s ease;
+position: relative;
+}
+@keyframes modalIn { from{transform:scale(0.96);opacity:0;} to{transform:scale(1);opacity:1;} }
+.modal-head {
+padding: 22px 24px 18px; border-bottom: 1px solid var(–border);
+position: sticky; top: 0; background: var(–surface); z-index: 1;
+display: flex; align-items: flex-start; justify-content: space-between;
+}
+.modal-close {
+width: 28px; height: 28px; border-radius: 50%; background: var(–surface3);
+border: 1px solid var(–border-soft); color: var(–text-muted);
+cursor: pointer; display: flex; align-items: center; justify-content: center;
+font-size: 14px; transition: all 0.15s; flex-shrink: 0; margin-left: 12px;
+}
+.modal-close:hover { color: var(–text); border-color: var(–border); }
+.modal-body { padding: 22px 24px; }
+.modal-section { margin-bottom: 20px; }
+.modal-section-title {
+font-size: 9.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 2px;
+color: var(–gold); margin-bottom: 10px;
+display: flex; align-items: center; gap: 8px;
+}
+.modal-section-title::after { content: ‘’; flex: 1; height: 1px; background: var(–border); }
+
+.capa-item {
+background: var(–surface3); border: 1px solid var(–border-soft);
+border-radius: 8px; padding: 12px 14px; margin-bottom: 7px;
+}
+.capa-title { font-size: 12.5px; font-weight: 600; color: var(–text); margin-bottom: 3px; }
+.capa-meta { font-size: 11px; color: var(–text-muted); display: flex; gap: 10px; }
+.capa-status { font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 4px; }
+.capa-open { background: rgba(184,122,32,0.2); color: #e8a840; }
+.capa-done { background: rgba(42,139,90,0.2); color: var(–green-light); }
+.capa-wip { background: rgba(42,139,139,0.2); color: var(–teal-light); }
+
+/* ===== NEW AUDIT / UPLOAD FORM ===== */
+.form-group { margin-bottom: 14px; }
+.form-label { font-size: 11px; font-weight: 600; color: var(–text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; display: block; }
+.form-input {
+width: 100%; background: var(–surface3); border: 1px solid var(–border-soft);
+border-radius: 7px; padding: 9px 12px; color: var(–text);
+font-family: ‘Inter’, sans-serif; font-size: 12.5px; outline: none;
+transition: border-color 0.18s;
+}
+.form-input:focus { border-color: var(–border); }
+.form-input::placeholder { color: var(–text-dim); }
+select.form-input option { background: var(–surface2); }
+textarea.form-input { resize: vertical; min-height: 70px; line-height: 1.5; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+.score-selector { display: flex; gap: 6px; flex-wrap: wrap; }
+.score-opt {
+padding: 6px 12px; border-radius: 7px; border: 1px solid var(–border-soft);
+background: var(–surface3); color: var(–text-muted); cursor: pointer;
+font-size: 12px; font-weight: 600; transition: all 0.15s;
+}
+.score-opt:hover { border-color: var(–border); }
+.score-opt.selected { border-color: var(–gold); color: var(–gold); background: var(–glow); }
+</style>
+
+</head>
+<body>
+
+<div class="overlay" id="overlay" onclick="closeDetail()"></div>
+
+<!-- DETAIL PANEL -->
+
+<div class="detail" id="detailPanel">
+ <div class="dp-head">
+   <button class="dp-close" onclick="closeDetail()">✕</button>
+   <div style="font-size:36px;margin-bottom:8px;" id="dp-flag"></div>
+   <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:700;color:var(--text);" id="dp-name"></div>
+   <div style="font-size:12px;color:var(--text-muted);margin:3px 0 10px;" id="dp-entity"></div>
+   <div style="display:flex;gap:5px;flex-wrap:wrap;" id="dp-pills"></div>
+ </div>
+ <div class="dp-body" id="dp-body"></div>
+</div>
+
+<!-- SIDEBAR -->
+
+<aside class="sidebar">
+ <div class="sidebar-logo">
+   <div class="logo-icon">💊</div>
+   <div class="logo-name">PharmaComply</div>
+   <div class="logo-sub">Regulatory Intelligence</div>
+ </div>
+
+ <div class="nav-group">
+   <div class="nav-group-label">Übersicht</div>
+   <div class="nav-item active" onclick="nav('dashboard')"><span class="nav-icon">◈</span><span>Dashboard</span></div>
+   <div class="nav-item" onclick="nav('process')"><span class="nav-icon">🔄</span><span>Zulassungsprozess</span></div>
+ </div>
+
+ <div class="nav-group">
+   <div class="nav-group-label">Länderdaten</div>
+   <div class="nav-item" onclick="nav('countries')"><span class="nav-icon">🗺</span><span>Länderübersicht</span></div>
+   <div class="nav-item" onclick="nav('contacts')"><span class="nav-icon">🏛</span><span>Behörden & Kontakte</span></div>
+   <div class="nav-item" onclick="nav('pricing')"><span class="nav-icon">💶</span><span>Preisrecht & HTA</span></div>
+ </div>
+
+ <div class="nav-group">
+   <div class="nav-group-label">Compliance</div>
+   <div class="nav-item" onclick="nav('advertising')"><span class="nav-icon">📢</span><span>Werberegelungen</span></div>
+   <div class="nav-item" onclick="nav('pharmacovigilance')"><span class="nav-icon">🛡</span><span>Pharmacovigilanz</span></div>
+   <div class="nav-item" onclick="nav('updates')"><span class="nav-icon">⚡</span><span>Regulatory Updates</span><span class="nav-badge">4</span></div>
+ </div>
+
+ <div class="nav-group">
+   <div class="nav-group-label">Dokumentation</div>
+   <div class="nav-item" onclick="nav('documents')"><span class="nav-icon">📁</span><span>Dokumente</span><span class="nav-badge-gold" id="docCountBadge">12</span></div>
+   <div class="nav-item" onclick="nav('audits')"><span class="nav-icon">🔍</span><span>Audits & Berichte</span></div>
+ </div>
+
+ <div class="nav-group">
+   <div class="nav-group-label">AI-Tools</div>
+   <div class="nav-item" onclick="nav('agent')"><span class="nav-icon">🤖</span><span>Pharma AI-Agent</span><span class="nav-badge-gold">BETA</span></div>
+ </div>
+
+ <div class="sidebar-bottom">
+   <div class="user-row">
+     <div class="user-av">MK</div>
+     <div>
+       <div class="user-name">Dr. Maria Keller</div>
+       <div class="user-role">Regulatory Affairs Lead</div>
+     </div>
+   </div>
+ </div>
+</aside>
+
+<!-- MAIN -->
+
+<main class="main">
+ <div class="topbar">
+   <div class="topbar-title" id="topbarTitle">Dashboard</div>
+   <span class="topbar-sep">·</span>
+   <span class="topbar-tag">Pharma Marketing</span>
+   <div class="search-wrap" style="margin-left:auto;">
+     <span style="color:var(--text-dim);font-size:13px;">⌕</span>
+     <input type="text" placeholder="Suchen nach Land, Gesetz, Behörde..." oninput="searchHandler(this.value)">
+   </div>
+ </div>
+
+ <div class="content">
+
+```
+<!-- ===== DASHBOARD ===== -->
+<div class="page active" id="page-dashboard">
+ <div class="kpi-row">
+   <div class="kpi">
+     <div class="kpi-label">Zielmärkte</div>
+     <div class="kpi-value">7</div>
+     <div class="kpi-sub">EU + Schweiz</div>
+   </div>
+   <div class="kpi">
+     <div class="kpi-label">Regulatorische Frameworks</div>
+     <div class="kpi-value">31</div>
+     <div class="kpi-sub">Gesetze & Verordnungen</div>
+   </div>
+   <div class="kpi">
+     <div class="kpi-label">Zulassungstypen</div>
+     <div class="kpi-value">4</div>
+     <div class="kpi-sub">CP, DCP, MRP, NP</div>
+   </div>
+   <div class="kpi">
+     <div class="kpi-label">Behörden & Kontakte</div>
+     <div class="kpi-value">22</div>
+     <div class="kpi-sub">Registriert</div>
+   </div>
+   <div class="kpi">
+     <div class="kpi-label">Offene Updates</div>
+     <div class="kpi-value" style="color:#e8a840;">4</div>
+     <div class="kpi-sub">Regulat. Änderungen</div>
+   </div>
+ </div>
+
+ <!-- PHARMA PROCESS OVERVIEW -->
+ <div class="card" style="margin-bottom:18px;">
+   <div class="card-hd">
+     <span class="card-title">💊 Pharma Marketing — Regulatorischer Gesamtüberblick</span>
+     <span class="pill pill-teal">Zulassungsübernahme</span>
+   </div>
+   <div class="card-bd">
+     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;">
+       <div style="background:var(--surface3);border-radius:8px;padding:14px;border:1px solid var(--border-soft);">
+         <div style="font-size:22px;margin-bottom:6px;">📋</div>
+         <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:4px;">MAH-Status</div>
+         <div style="font-size:11px;color:var(--text-muted);">Marketing Authorization Holder (MAH) muss pro Land als juristische Person benannt sein und alle Pflichten übernehmen.</div>
+       </div>
+       <div style="background:var(--surface3);border-radius:8px;padding:14px;border:1px solid var(--border-soft);">
+         <div style="font-size:22px;margin-bottom:6px;">🔬</div>
+         <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:4px;">Zulassungsverfahren</div>
+         <div style="font-size:11px;color:var(--text-muted);">Zentrales Verfahren (EMA), Dezentralisiert (DCP), Gegenseitige Anerkennung (MRP), National. Schweiz: Swissmedic.</div>
+       </div>
+       <div style="background:var(--surface3);border-radius:8px;padding:14px;border:1px solid var(--border-soft);">
+         <div style="font-size:22px;margin-bottom:6px;">📢</div>
+         <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:4px;">Werbepflichten</div>
+         <div style="font-size:11px;color:var(--text-muted);">Strenge Regulierung pro Land: HWG (DE/AT), TPA/OMPA (CH), CSP/Code de la Santé (FR). Rx-Werbung nur an HCPs.</div>
+       </div>
+       <div style="background:var(--surface3);border-radius:8px;padding:14px;border:1px solid var(--border-soft);">
+         <div style="font-size:22px;margin-bottom:6px;">🛡</div>
+         <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:4px;">Pharmacovigilanz</div>
+         <div style="font-size:11px;color:var(--text-muted);">EU QPPV zwingend, PSMF-Pflicht, EudraVigilance, SUSAR-Meldung, PSUR-Berichte. National: GPO (DE), LPPV (AT/FR).</div>
+       </div>
+     </div>
+   </div>
+ </div>
+
+ <div class="g2" style="margin-bottom:18px;">
+   <div>
+     <div class="sh">
+       <div class="sh-title">Rollout <span>Status</span></div>
+       <button class="btn btn-ghost btn-sm" onclick="nav('countries')">Alle</button>
+     </div>
+     <div class="card">
+       <table class="tbl">
+         <tr><th>Land</th><th>Status</th><th>MAH</th><th>Zulassung</th></tr>
+         <tr onclick="openDetail('de')"><td>🇩🇪 Deutschland</td><td><span class="pill pill-green">● Aktiv</span></td><td><span class="pill pill-green">Benannt</span></td><td style="font-size:11px;color:var(--text-muted);">BfArM/PEI</td></tr>
+         <tr onclick="openDetail('at')"><td>🇦🇹 Österreich</td><td><span class="pill pill-green">● Aktiv</span></td><td><span class="pill pill-green">Benannt</span></td><td style="font-size:11px;color:var(--text-muted);">AGES/BASG</td></tr>
+         <tr onclick="openDetail('ch')"><td>🇨🇭 Schweiz</td><td><span class="pill pill-amber">● Prüfung</span></td><td><span class="pill pill-amber">Offen</span></td><td style="font-size:11px;color:var(--text-muted);">Swissmedic</td></tr>
+         <tr onclick="openDetail('fr')"><td>🇫🇷 Frankreich</td><td><span class="pill pill-amber">● Prüfung</span></td><td><span class="pill pill-amber">Offen</span></td><td style="font-size:11px;color:var(--text-muted);">ANSM</td></tr>
+         <tr onclick="openDetail('nl')"><td>🇳🇱 Niederlande</td><td><span class="pill pill-red">● Geplant</span></td><td><span class="pill pill-red">Ausstehend</span></td><td style="font-size:11px;color:var(--text-muted);">CBG-MEB</td></tr>
+       </table>
+     </div>
+   </div>
+
+   <div>
+     <div class="sh"><div class="sh-title">Aktivitäts<span>-Log</span></div></div>
+     <div class="card">
+       <div class="card-bd">
+         <div class="timeline">
+           <div class="tl-item"><div class="tl-dot"></div><div class="tl-date">14 Feb 2025</div><div class="tl-text">CH: Swissmedic TempMA-Anforderungen aktualisiert</div></div>
+           <div class="tl-item"><div class="tl-dot" style="background:var(--teal-light)"></div><div class="tl-date">10 Feb 2025</div><div class="tl-text">EU AI Act: Verbotene KI-Praktiken seit 2. Feb wirksam</div></div>
+           <div class="tl-item"><div class="tl-dot" style="background:var(--green-light)"></div><div class="tl-date">01 Feb 2025</div><div class="tl-text">DE: AMNOG MFG 2024 — vertrauliche Preise ab Jan 2025</div></div>
+           <div class="tl-item"><div class="tl-dot" style="background:var(--text-muted)"></div><div class="tl-date">15 Jan 2025</div><div class="tl-text">DE: GPO für alle nationalen MA-Inhaber bestätigt</div></div>
+           <div class="tl-item"><div class="tl-dot" style="background:var(--text-muted)"></div><div class="tl-date">01 Jan 2025</div><div class="tl-text">AT: FMA Compliance Check abgeschlossen</div></div>
+         </div>
+       </div>
+     </div>
+   </div>
+ </div>
+
+ <div class="sh"><div class="sh-title">Länder — <span>Schnellübersicht</span></div></div>
+ <div class="country-grid" id="dashCountryGrid"></div>
+</div>
+
+<!-- ===== ZULASSUNGSPROZESS ===== -->
+<div class="page" id="page-process">
+ <div class="info-alert" style="margin-bottom:18px;">
+   <strong>Kontext:</strong> Das Unternehmen übernimmt die Vermarktung von bereits zugelassenen Medikamenten (MAH-Transfer). Die nachfolgenden Prozesse beschreiben die regulatorischen Anforderungen für eine Übernahme der Marketingzulassung sowie den Rollout auf neue Länder.
+ </div>
+
+ <div class="g2" style="margin-bottom:18px;">
+   <div>
+     <div class="sh"><div class="sh-title">EU Zulassungs<span>verfahren</span> <small>4 Procedures</small></div></div>
+     <div class="card">
+       <div class="card-bd">
+         <div class="process-steps">
+           <div class="step">
+             <div class="step-num">CP</div>
+             <div class="step-content">
+               <div class="step-title">Zentrales Verfahren (EMA)</div>
+               <div class="step-desc">Gilt EU-weit in allen 27 MS + EEA. Pflicht für biotech, neue Wirkstoffe, Orphan Drugs. Scientific Committee: CHMP. Bewilligungsdauer: max. 210 aktive Tage. → Gültig für DE, AT, FR, NL, BE, IT.</div>
+             </div>
+           </div>
+           <div class="step">
+             <div class="step-num">DCP</div>
+             <div class="step-content">
+               <div class="step-title">Dezentralisiertes Verfahren</div>
+               <div class="step-desc">Simultane Einreichung in mehreren MS. Führendes Mitgliedsland (RMS) + betroffene Länder (CMS). Häufig für Generika genutzt. Gute Wahl für Multi-Country-Rollout in EU ohne vorherige nationale Zulassung.</div>
+             </div>
+           </div>
+           <div class="step">
+             <div class="step-num">MRP</div>
+             <div class="step-content">
+               <div class="step-title">Gegenseitiges Anerkennungsverfahren</div>
+               <div class="step-desc">Basiert auf bestehender nationaler Zulassung (RMS). CMSs erkennen RMS-Bewertung an. Ideal wenn bereits eine EU-Zulassung vorhanden ist und auf weitere Länder ausgerollt wird.</div>
+             </div>
+           </div>
+           <div class="step">
+             <div class="step-num">NP</div>
+             <div class="step-content">
+               <div class="step-title">Nationale Verfahren (Einzelstaatlich)</div>
+               <div class="step-desc">Nur gültig im jeweiligen Land. Heute selten für neue Produkte. DE: BfArM oder PEI. AT: AGES/BASG. Für Produkte die nur in einem Land vermarktet werden sollen. ⚠️ CH nicht Teil der EU-Verfahren → Swissmedic separat!</div>
+             </div>
+           </div>
+         </div>
+       </div>
+     </div>
+   </div>
+
+   <div>
+     <div class="sh"><div class="sh-title">MAH-Transfer<span> Prozess</span></div></div>
+     <div class="card" style="margin-bottom:14px;">
+       <div class="card-bd">
+         <div class="process-steps">
+           <div class="step">
+             <div class="step-num" style="background:var(--teal);">1</div>
+             <div class="step-content">
+               <div class="step-title">Variation Application (Type II)</div>
+               <div class="step-desc">Einreichung eines Variation-Antrags beim zuständigen Zulassungsinhaber und den Behörden. Begründung der Übernahme, Due Diligence der Produktdokumentation.</div>
+             </div>
+           </div>
+           <div class="step">
+             <div class="step-num" style="background:var(--teal);">2</div>
+             <div class="step-content">
+               <div class="step-title">Aufbau Pharmacovigilanz-System</div>
+               <div class="step-desc">Benennung EU QPPV (Pflicht, muss in EEA ansässig sein), Erstellung PSMF, Onboarding EudraVigilance, Risk Management Plan übernehmen oder erstellen.</div>
+             </div>
+           </div>
+           <div class="step">
+             <div class="step-num" style="background:var(--teal);">3</div>
+             <div class="step-content">
+               <div class="step-title">Lokale Strukturen & Lizenzen</div>
+               <div class="step-desc">WDA (Wholesale Distribution Authorization) pro Land. QP benennen. Ggf. Lokal-Entitäten gründen (CH: Pflicht für Swissmedic-Zulassung). GDP-Zertifizierung für Supply Chain.</div>
+             </div>
+           </div>
+           <div class="step">
+             <div class="step-num" style="background:var(--teal);">4</div>
+             <div class="step-content">
+               <div class="step-title">Nationale Compliance-Struktur</div>
+               <div class="step-desc">DE: Stufenplanbeauftragter (GPO) §63a AMG. FR: Exploitant-Zulassung + Responsible Person. CH: Swissmedic-Bewilligung + kantonale Anforderungen. AT: lokale PV-Pflichten.</div>
+             </div>
+           </div>
+           <div class="step">
+             <div class="step-num" style="background:var(--teal);">5</div>
+             <div class="step-content">
+               <div class="step-title">Werbung & Marktzugang</div>
+               <div class="step-desc">Erstellen länderspezifischer Werbematerialien. Einhaltung HWG (DE/AT), OMPA (CH), CSP (FR). HTA-Verfahren einleiten (AMNOG in DE, EK-AHS in AT). Preisverhandlungen mit Kostenträgern.</div>
+             </div>
+           </div>
+         </div>
+       </div>
+     </div>
+
+     <div class="warning-box">
+       <strong>⚠️ Schweiz Sonderregel:</strong> Swissmedic erkennt EU-Zulassungen NICHT an. Eigener Zulassungsantrag nach HMG/TPA zwingend erforderlich. Lokale juristische Entität in der Schweiz Voraussetzung. Bearbeitungszeit mind. 12 Monate.
+     </div>
+     <div class="info-alert">
+       <strong>ℹ️ EU-Pass:</strong> In EU-Ländern (DE, AT, FR, NL, BE) gilt: Eine Zulassung per CP oder DCP/MRP ermöglicht den "EU-Pass" — d.h. Übertragbarkeit auf alle MS ohne separate Neubewilligungen. Erhebliche Zeit- und Kostenersparnis beim Roll-out.
+     </div>
+   </div>
+ </div>
+</div>
+
+<!-- ===== LÄNDERÜBERSICHT ===== -->
+<div class="page" id="page-countries">
+ <div class="sh">
+   <div class="sh-title">Länder — <span>Pharma Regulatorik</span></div>
+   <select id="statusFilter" onchange="filterCountries()" style="background:var(--surface2);border:1px solid var(--border-soft);color:var(--text);padding:6px 11px;border-radius:7px;font-size:12px;outline:none;cursor:pointer;">
+     <option value="all">Alle Status</option>
+     <option value="active">Aktiv</option>
+     <option value="review">In Prüfung</option>
+     <option value="planned">Geplant</option>
+   </select>
+ </div>
+ <div class="country-grid" id="allCountryGrid"></div>
+</div>
+
+<!-- ===== BEHÖRDEN & KONTAKTE ===== -->
+<div class="page" id="page-contacts">
+ <div class="sh">
+   <div class="sh-title">Behörden & <span>Ansprechpartner</span></div>
+   <div style="display:flex;gap:7px;">
+     <button class="btn btn-gold btn-sm" onclick="filterContacts('all',this)">Alle</button>
+     <button class="btn btn-ghost btn-sm" onclick="filterContacts('authority',this)">Behörden</button>
+     <button class="btn btn-ghost btn-sm" onclick="filterContacts('internal',this)">Intern</button>
+     <button class="btn btn-ghost btn-sm" onclick="filterContacts('legal',this)">Externe Berater</button>
+   </div>
+ </div>
+ <div class="contacts-grid" id="contactsGrid"></div>
+</div>
+
+<!-- ===== PREISRECHT & HTA ===== -->
+<div class="page" id="page-pricing">
+ <div class="sh"><div class="sh-title">Preisrecht & <span>HTA-Prozesse</span></div></div>
+ <div class="info-alert" style="margin-bottom:18px;">
+   <strong>Wichtig:</strong> Jedes Land hat eigene HTA- und Preisregulierungsverfahren. Die Preise können durch internationale Referenzpreissetzung erhebliche Auswirkungen auf andere Märkte haben.
+ </div>
+
+ <div style="display:flex;flex-direction:column;gap:14px;" id="pricingContent"></div>
+</div>
+
+<!-- ===== WERBEREGELUNGEN ===== -->
+<div class="page" id="page-advertising">
+ <div class="sh"><div class="sh-title">Pharma<span>-Werberegelungen</span></div></div>
+ <div class="warning-box" style="margin-bottom:18px;">
+   <strong>⚠️ Grundregel EU:</strong> Werbung für verschreibungspflichtige Medikamente (Rx) an die Allgemeinheit ist EU-weit <strong>verboten</strong> (Directive 2001/83/EC, Art. 88). Nur Werbung an Healthcare Professionals (HCPs) erlaubt.
+ </div>
+ <div style="display:flex;flex-direction:column;gap:14px;" id="advertisingContent"></div>
+</div>
+
+<!-- ===== PHARMACOVIGILANZ ===== -->
+<div class="page" id="page-pharmacovigilance">
+ <div class="sh"><div class="sh-title">Pharma<span>covigilanz</span> <small>EU & CH Anforderungen</small></div></div>
+
+ <div class="g2" style="margin-bottom:18px;">
+   <div>
+     <div class="sh"><div class="sh-title">EU <span>QPPV-Pflichten</span></div></div>
+     <div class="card">
+       <div class="card-bd">
+         <div class="process-steps">
+           <div class="step">
+             <div class="step-num" style="background:var(--red);font-size:14px;">!</div>
+             <div class="step-content">
+               <div class="step-title">EU QPPV — Qualified Person Responsible for Pharmacovigilance</div>
+               <div class="step-desc">Gesetzlich zwingend für jeden MAH (Art. 23 VO 726/2004, Art. 104 Dir. 2001/83/EC). Muss in EEA ansässig sein, 24/7 erreichbar. Persönlich haftbar für PV-System. Name + Kontakt an Behörden und EMA melden.</div>
+             </div>
+           </div>
+           <div class="step">
+             <div class="step-num">📁</div>
+             <div class="step-content">
+               <div class="step-title">PSMF — Pharmacovigilance System Master File</div>
+               <div class="step-desc">Verpflichtend bei jeder MA-Einreichung. Enthält: Organisationsstruktur PV-System, QPPV-Angaben, Datenbankbeschreibung, SOP-Liste, Auditergebnisse, CAPA-Management, Produktliste.</div>
+             </div>
+           </div>
+           <div class="step">
+             <div class="step-num">📊</div>
+             <div class="step-content">
+               <div class="step-title">EudraVigilance — ICSR-Meldung</div>
+               <div class="step-desc">Elektronische Meldung aller Individual Case Safety Reports (ICSRs) / unerwünschter Arzneimittelwirkungen. Frist: schwerwiegende unerwartete Reaktionen binnen 15 Tage. Bekannte schwere Reaktionen: 15 Tage. Nicht-schwere: 90 Tage.</div>
+             </div>
+           </div>
+           <div class="step">
+             <div class="step-num">📋</div>
+             <div class="step-content">
+               <div class="step-title">PSUR — Periodic Safety Update Reports</div>
+               <div class="step-desc">Regelmäßige Sicherheitsberichte (Frequenz je nach Produkt: 6-monatlich, jährlich, 3-jährlich). Einreichung über PSUR Single Assessment (PSUSA) bei EMA und nationalen Behörden.</div>
+             </div>
+           </div>
+           <div class="step">
+             <div class="step-num">⚠️</div>
+             <div class="step-content">
+               <div class="step-title">SUSAR-Meldung (Clinical Trials)</div>
+               <div class="step-desc">Suspected Unexpected Serious Adverse Reactions aus klinischen Prüfungen: Fatal/lebensbedrohlich binnen 7 Tage, sonstige SUSAR binnen 15 Tage. Einreichung in EudraVigilance-CT-Modul.</div>
+             </div>
+           </div>
+         </div>
+       </div>
+     </div>
+   </div>
+
+   <div>
+     <div class="sh"><div class="sh-title">Nationale <span>PV-Pflichten</span></div></div>
+     <div style="display:flex;flex-direction:column;gap:10px;">
+       <div class="card">
+         <div class="card-hd"><span class="card-title">🇩🇪 Deutschland — Stufenplanbeauftragter (GPO)</span></div>
+         <div class="card-bd">
+           <div class="step-desc">§63a AMG: Pflicht zur Benennung eines Stufenplanbeauftragten (GPO) für alle nationalen MA (MRP/DCP). Verantwortlich für: Systematische Erfassung von Qualitätsmängeln, Primärkontakt für Rückrufe, Fälschungsbenachrichtigungen, Überwachung prä-klinischer Studien. <span class="pill pill-amber" style="font-size:9px;margin-left:4px;">Nur für nat. MA erforderlich</span></div>
+         </div>
+       </div>
+       <div class="card">
+         <div class="card-hd"><span class="card-title">🇦🇹 Österreich — LPPV</span></div>
+         <div class="card-bd">
+           <div class="step-desc">Local Person for Pharmacovigilance (LPPV) gesetzlich vorgeschrieben. Kontaktperson für AGES/BASG. Residenzpflicht in Österreich. Sprachkenntnisse Deutsch erforderlich.</div>
+         </div>
+       </div>
+       <div class="card">
+         <div class="card-hd"><span class="card-title">🇫🇷 Frankreich — Exploitant + LPPV</span></div>
+         <div class="card-bd">
+           <div class="step-desc">Frankreich verlangt eine "Exploitant"-Zulassung (Autorisierung zur Vermarktung, French Public Health Code). Kann separate Entität vom MAH sein. Zusätzlich LPPV mit Residenzpflicht, direkter Haftung, Sprachkenntnisse Französisch. Meldebehörde: ANSM.</div>
+         </div>
+       </div>
+       <div class="card">
+         <div class="card-hd"><span class="card-title">🇨🇭 Schweiz — Swissmedic PV</span></div>
+         <div class="card-bd">
+           <div class="step-desc">Eigenes PV-System nach HMG/TPA. Meldung an Swissmedic. Responsible Person (RP) für Schweizer Markt zwingend. Kantonsapotheker-Inspektionen. PSUR: innerhalb 4 Jahre nach MA-Erteilung für NAS. Kein EudraVigilance-Zugang (separates System).</div>
+         </div>
+       </div>
+     </div>
+   </div>
+ </div>
+
+ <div class="warning-box">
+   <strong>⚠️ Sanktionen bei PV-Verstößen:</strong> Nicht-Einhaltung der PV-Pflichten kann zur Aussetzung oder dem Entzug der Marktzulassung führen sowie zu Geldstrafen von bis zu 6% des Gesamtumsatzes des MAH (EU). In Deutschland drohen strafrechtliche Konsequenzen nach §96 AMG.
+ </div>
+</div>
+
+<!-- ===== REGULATORY UPDATES ===== -->
+<div class="page" id="page-updates">
+ <div class="sh"><div class="sh-title">Regulatory <span>Updates 2025</span></div></div>
+ <div id="updatesContent"></div>
+</div>
+
+<!-- ===== AI AGENT ===== -->
+<div class="page" id="page-agent">
+ <div class="ai-wrap">
+   <div class="ai-sidebar">
+     <div class="info-box">
+       <div class="ib-title">💊 Pharma Schnellfragen</div>
+       <div class="ib-item" onclick="quickSend('Was sind die MAH-Pflichten bei Übernahme einer Arzneimittelzulassung in Deutschland?')">📋 MAH-Pflichten DE</div>
+       <div class="ib-item" onclick="quickSend('Erkläre das AMNOG-Verfahren in Deutschland und wie es den Preis beeinflusst')">💶 AMNOG Preisverfahren</div>
+       <div class="ib-item" onclick="quickSend('Was ist der Unterschied zwischen EU QPPV und GPO in Deutschland?')">🛡 QPPV vs GPO</div>
+       <div class="ib-item" onclick="quickSend('Welche Anforderungen stellt Swissmedic für die Zulassung in der Schweiz?')">🇨🇭 Swissmedic Anforderungen</div>
+       <div class="ib-item" onclick="quickSend('Was darf man in der Pharmawerbung in Deutschland und was ist verboten?')">📢 HWG Werberegelungen</div>
+       <div class="ib-item" onclick="quickSend('Was brauche ich in Frankreich als Exploitant und was sind die ANSM-Anforderungen?')">🇫🇷 Frankreich Exploitant</div>
+       <div class="ib-item" onclick="quickSend('Welche PSUR-Fristen muss ich als MAH einhalten?')">📊 PSUR Fristen</div>
+       <div class="ib-item" onclick="quickSend('Vergleiche die Pharmawerberegelungen in Deutschland, Österreich und der Schweiz')">⚖️ DE/AT/CH Werbevergleich</div>
+     </div>
+     <div class="info-box">
+       <div class="ib-title">📊 Wissensbasis</div>
+       <div class="ib-item" style="cursor:default;">🟢 7 Länder geladen</div>
+       <div class="ib-item" style="cursor:default;">📜 31 Gesetze indexiert</div>
+       <div class="ib-item" style="cursor:default;">🏛 22 Behörden registriert</div>
+       <div class="ib-item" style="cursor:default;">💊 Pharma-spezifisch</div>
+     </div>
+     <div class="info-box">
+       <div class="ib-title">ℹ️ Hinweis</div>
+       <div style="font-size:11px;color:var(--text-muted);line-height:1.6;">Der Agent basiert auf hinterlegten regulatorischen Daten. Bei rechtlich relevanten Entscheidungen immer lokale Rechtsexperten einbeziehen.</div>
+     </div>
+   </div>
+
+   <div class="ai-panel">
+     <div class="ai-head">
+       <div class="ai-av-main">🤖</div>
+       <div>
+         <div class="ai-name-main">PharmaComply AI-Agent</div>
+         <div class="ai-status-line"><span class="dot dot-green" style="width:6px;height:6px;"></span> Online — Pharma Regulatory Expertise</div>
+       </div>
+       <div style="margin-left:auto;display:flex;gap:8px;">
+         <button class="btn btn-ghost btn-sm" onclick="clearChat()">Chat löschen</button>
+       </div>
+     </div>
+
+     <div class="chat-area" id="chatArea">
+       <div class="msg ai">
+         <div class="msg-av ai-type">🤖</div>
+         <div class="msg-bubble">
+           Willkommen beim <strong>PharmaComply AI-Agent</strong>! Ich bin Ihr spezialisierter Assistent für pharmazeutische Regulatorik in Europa.<br><br>
+           Ich kann Ihnen helfen bei:<br>
+           <strong>🔬 Zulassungsverfahren</strong> — CP, DCP, MRP, NP, Swissmedic<br>
+           <strong>📋 MAH-Pflichten</strong> — Übernahme, Transfer, Verantwortlichkeiten<br>
+           <strong>🛡 Pharmacovigilanz</strong> — QPPV, PSMF, EudraVigilance, PSUR<br>
+           <strong>📢 Werberegelungen</strong> — HWG, OMPA, CSP — länderspezifisch<br>
+           <strong>💶 Preisrecht & HTA</strong> — AMNOG (DE), Erstattungsverfahren AT/CH/FR<br>
+           <strong>🏛 Behördenkontakte</strong> — BfArM, EMA, Swissmedic, ANSM, etc.<br><br>
+           Wie kann ich Ihnen helfen?
+         </div>
+       </div>
+     </div>
+
+     <div class="chips-row">
+       <div class="chip" onclick="quickSend('Was sind die wichtigsten ersten Schritte bei einem MAH-Transfer?')">MAH-Transfer Erstschritte</div>
+       <div class="chip" onclick="quickSend('Erkläre AMNOG')">AMNOG erklärt</div>
+       <div class="chip" onclick="quickSend('Welche Behörde ist für Pharmawerbung in Deutschland zuständig?')">Pharmawerbung DE</div>
+       <div class="chip" onclick="quickSend('Wer ist der EU QPPV und was sind seine Aufgaben?')">QPPV Aufgaben</div>
+     </div>
+
+     <div class="chat-input-area">
+       <textarea class="chat-in" id="chatInput" rows="1" placeholder="Stellen Sie Ihre pharmazeutische Compliance-Frage..." onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+       <button class="send-btn" id="sendBtn" onclick="doSend()">➤</button>
+     </div>
+   </div>
+ </div>
+</div>
+
+<!-- ===== DOKUMENTE ===== -->
+<div class="page" id="page-documents">
+
+ <!-- Upload progress toasts -->
+ <div class="upload-progress" id="uploadProgress"></div>
+
+ <div class="doc-stats-row">
+   <div class="doc-stat">
+     <div class="doc-stat-lbl">Dokumente gesamt</div>
+     <div class="doc-stat-val" id="statTotal">12</div>
+     <div class="doc-stat-sub">in der Bibliothek</div>
+   </div>
+   <div class="doc-stat">
+     <div class="doc-stat-lbl">Neu (30 Tage)</div>
+     <div class="doc-stat-val" style="color:var(--teal-light);" id="statNew">4</div>
+     <div class="doc-stat-sub">hochgeladen</div>
+   </div>
+   <div class="doc-stat">
+     <div class="doc-stat-lbl">Ablaufend bald</div>
+     <div class="doc-stat-val" style="color:#e8a840;" id="statExpiring">2</div>
+     <div class="doc-stat-sub">innerhalb 60 Tage</div>
+   </div>
+   <div class="doc-stat">
+     <div class="doc-stat-lbl">Speicher genutzt</div>
+     <div class="doc-stat-val" id="statSize">48 MB</div>
+     <div class="doc-stat-sub">von 5 GB</div>
+   </div>
+ </div>
+
+ <div class="doc-layout">
+   <div class="doc-sidebar">
+     <!-- Upload Zone -->
+     <div class="upload-zone" id="uploadZone">
+       <input type="file" id="fileInput" multiple accept=".pdf,.docx,.xlsx,.pptx,.doc,.xls,.txt,.csv" onchange="handleFileSelect(this.files)">
+       <span class="upload-icon">⬆</span>
+       <div class="upload-title">Dokument hochladen</div>
+       <div class="upload-sub">Drag & Drop oder klicken</div>
+       <div class="upload-types">
+         <span class="tag tag-red" style="font-size:9px;">PDF</span>
+         <span class="tag tag-blue" style="font-size:9px;">DOCX</span>
+         <span class="tag tag-green" style="font-size:9px;">XLSX</span>
+         <span class="tag tag-gold" style="font-size:9px;">PPTX</span>
+       </div>
+     </div>
+
+     <!-- Filter -->
+     <div class="doc-filter-box">
+       <div class="doc-filter-title">Kategorie</div>
+       <div class="doc-filter-item active" onclick="filterDocs('all', this)">
+         <span>📋 Alle Dokumente</span>
+         <span class="doc-filter-count" id="fAll">12</span>
+       </div>
+       <div class="doc-filter-item" onclick="filterDocs('regulatory', this)">
+         <span>🔬 Regulatorik</span>
+         <span class="doc-filter-count" id="fReg">4</span>
+       </div>
+       <div class="doc-filter-item" onclick="filterDocs('pv', this)">
+         <span>🛡 Pharmacovigilanz</span>
+         <span class="doc-filter-count" id="fPV">3</span>
+       </div>
+       <div class="doc-filter-item" onclick="filterDocs('audit', this)">
+         <span>🔍 Audit-Dokumente</span>
+         <span class="doc-filter-count" id="fAudit">2</span>
+       </div>
+       <div class="doc-filter-item" onclick="filterDocs('contract', this)">
+         <span>📝 Verträge & SOPs</span>
+         <span class="doc-filter-count" id="fContract">2</span>
+       </div>
+       <div class="doc-filter-item" onclick="filterDocs('other', this)">
+         <span>📌 Sonstiges</span>
+         <span class="doc-filter-count" id="fOther">1</span>
+       </div>
+     </div>
+
+     <!-- Sort -->
+     <div class="doc-filter-box">
+       <div class="doc-filter-title">Sortierung</div>
+       <select class="form-input" id="docSort" onchange="sortDocs(this.value)" style="padding:7px 10px;font-size:12px;">
+         <option value="date-desc">Neueste zuerst</option>
+         <option value="date-asc">Älteste zuerst</option>
+         <option value="name-asc">Name A–Z</option>
+         <option value="name-desc">Name Z–A</option>
+         <option value="size-desc">Größte zuerst</option>
+       </select>
+     </div>
+   </div>
+
+   <div class="doc-main">
+     <div class="sh">
+       <div class="sh-title">Dokument<span>-Bibliothek</span></div>
+       <div style="display:flex;gap:8px;align-items:center;">
+         <div style="background:var(--surface2);border:1px solid var(--border-soft);border-radius:7px;padding:5px 11px;display:flex;gap:7px;align-items:center;">
+           <span style="color:var(--text-dim);font-size:12px;">⌕</span>
+           <input type="text" placeholder="Dokument suchen..." oninput="searchDocs(this.value)"
+             style="background:none;border:none;outline:none;color:var(--text);font-size:12px;font-family:'Inter',sans-serif;width:160px;">
+         </div>
+         <label class="btn btn-gold btn-sm" style="cursor:pointer;display:flex;align-items:center;gap:5px;">
+           ⬆ Hochladen
+           <input type="file" multiple accept=".pdf,.docx,.xlsx,.pptx,.doc,.xls" onchange="handleFileSelect(this.files)" style="display:none;">
+         </label>
+       </div>
+     </div>
+     <div class="doc-grid" id="docGrid"></div>
+   </div>
+ </div>
+</div>
+
+<!-- ===== AUDITS ===== -->
+<div class="page" id="page-audits">
+
+ <!-- Audit Stats -->
+ <div class="audit-stats-row">
+   <div class="doc-stat">
+     <div class="doc-stat-lbl">Audits gesamt</div>
+     <div class="doc-stat-val">6</div>
+     <div class="doc-stat-sub">dokumentiert</div>
+   </div>
+   <div class="doc-stat">
+     <div class="doc-stat-lbl">Ø Score</div>
+     <div class="doc-stat-val" style="color:var(--green-light);">87%</div>
+     <div class="doc-stat-sub">Compliance-Rate</div>
+   </div>
+   <div class="doc-stat">
+     <div class="doc-stat-lbl">Offene CAPAs</div>
+     <div class="doc-stat-val" style="color:#e8a840;">5</div>
+     <div class="doc-stat-sub">Maßnahmen offen</div>
+   </div>
+   <div class="doc-stat">
+     <div class="doc-stat-lbl">Nächster Audit</div>
+     <div class="doc-stat-val" style="font-size:18px;">Apr 25</div>
+     <div class="doc-stat-sub">Externe QPPV-Prüfung</div>
+   </div>
+ </div>
+
+ <div class="audit-layout">
+   <div class="audit-sidebar">
+
+     <!-- New Audit Button -->
+     <div class="new-audit-btn" onclick="openNewAuditModal()">
+       <div style="font-size:24px;margin-bottom:7px;">＋</div>
+       <div style="font-size:12.5px;font-weight:600;color:var(--text);">Neuen Audit anlegen</div>
+       <div style="font-size:11px;color:var(--text-muted);margin-top:3px;">Bericht erstellen & dokumentieren</div>
+     </div>
+
+     <!-- Audit Filter -->
+     <div class="doc-filter-box">
+       <div class="doc-filter-title">Audit-Typ</div>
+       <div class="doc-filter-item active" onclick="filterAudits('all', this)"><span>🔍 Alle Audits</span><span class="doc-filter-count">6</span></div>
+       <div class="doc-filter-item" onclick="filterAudits('internal', this)"><span>🏢 Intern</span><span class="doc-filter-count">3</span></div>
+       <div class="doc-filter-item" onclick="filterAudits('external', this)"><span>🌐 Extern</span><span class="doc-filter-count">2</span></div>
+       <div class="doc-filter-item" onclick="filterAudits('authority', this)"><span>🏛 Behörden-Inspektion</span><span class="doc-filter-count">1</span></div>
+     </div>
+
+     <!-- Audit Status Filter -->
+     <div class="doc-filter-box">
+       <div class="doc-filter-title">Status</div>
+       <div class="doc-filter-item active" onclick="filterAuditStatus('all', this)"><span>📋 Alle Status</span></div>
+       <div class="doc-filter-item" onclick="filterAuditStatus('completed', this)"><span style="color:var(--green-light);">✓ Abgeschlossen</span></div>
+       <div class="doc-filter-item" onclick="filterAuditStatus('in-progress', this)"><span style="color:#e8a840;">◑ In Bearbeitung</span></div>
+       <div class="doc-filter-item" onclick="filterAuditStatus('planned', this)"><span style="color:var(--text-muted);">○ Geplant</span></div>
+     </div>
+
+     <!-- CAPA Summary -->
+     <div class="doc-filter-box">
+       <div class="doc-filter-title">CAPA-Übersicht</div>
+       <div style="display:flex;flex-direction:column;gap:5px;">
+         <div style="display:flex;justify-content:space-between;font-size:11.5px;">
+           <span style="color:var(--text-muted);">Offen</span>
+           <span style="color:#e8a840;font-weight:600;">5</span>
+         </div>
+         <div style="display:flex;justify-content:space-between;font-size:11.5px;">
+           <span style="color:var(--text-muted);">In Bearbeitung</span>
+           <span style="color:var(--teal-light);font-weight:600;">3</span>
+         </div>
+         <div style="display:flex;justify-content:space-between;font-size:11.5px;">
+           <span style="color:var(--text-muted);">Abgeschlossen</span>
+           <span style="color:var(--green-light);font-weight:600;">11</span>
+         </div>
+         <div style="height:1px;background:var(--border-soft);margin:4px 0;"></div>
+         <div style="height:6px;background:var(--surface3);border-radius:3px;overflow:hidden;display:flex;gap:2px;">
+           <div style="width:58%;background:var(--green-light);border-radius:3px;"></div>
+           <div style="width:16%;background:var(--teal-light);"></div>
+           <div style="width:26%;background:#e8a840;border-radius:0 3px 3px 0;"></div>
+         </div>
+         <div style="font-size:10px;color:var(--text-muted);text-align:right;">58% erledigt</div>
+       </div>
+     </div>
+   </div>
+
+   <div class="audit-main">
+     <div class="sh">
+       <div class="sh-title">Audit<span>-Berichte</span></div>
+       <div style="display:flex;gap:8px;">
+         <div style="background:var(--surface2);border:1px solid var(--border-soft);border-radius:7px;padding:5px 11px;display:flex;gap:7px;align-items:center;">
+           <span style="color:var(--text-dim);font-size:12px;">⌕</span>
+           <input type="text" placeholder="Audit suchen..." oninput="searchAudits(this.value)"
+             style="background:none;border:none;outline:none;color:var(--text);font-size:12px;font-family:'Inter',sans-serif;width:150px;">
+         </div>
+         <button class="btn btn-gold btn-sm" onclick="openNewAuditModal()">＋ Neuer Audit</button>
+       </div>
+     </div>
+     <div id="auditGrid"></div>
+   </div>
+ </div>
+</div>
+
+<!-- ===== NEW AUDIT MODAL ===== -->
+<div class="modal-overlay" id="newAuditModal">
+ <div class="modal">
+   <div class="modal-head">
+     <div>
+       <div style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:700;color:var(--text);">Neuen Audit anlegen</div>
+       <div style="font-size:11.5px;color:var(--text-muted);margin-top:2px;">Audit-Bericht erstellen und dokumentieren</div>
+     </div>
+     <button class="modal-close" onclick="closeNewAuditModal()">✕</button>
+   </div>
+   <div class="modal-body">
+     <div class="form-row">
+       <div class="form-group">
+         <label class="form-label">Audit-Titel *</label>
+         <input type="text" class="form-input" id="newAuditTitle" placeholder="z.B. QPPV-System Interne Prüfung Q1 2025">
+       </div>
+       <div class="form-group">
+         <label class="form-label">Audit-Typ *</label>
+         <select class="form-input" id="newAuditType">
+           <option value="">Bitte wählen...</option>
+           <option value="internal">🏢 Intern</option>
+           <option value="external">🌐 Extern (Dienstleister)</option>
+           <option value="authority">🏛 Behörden-Inspektion</option>
+           <option value="mock">🟢 Mock Inspection</option>
+         </select>
+       </div>
+     </div>
+     <div class="form-row">
+       <div class="form-group">
+         <label class="form-label">Betroffenes Land / Scope *</label>
+         <select class="form-input" id="newAuditCountry">
+           <option value="">Land wählen...</option>
+           <option value="EU-weit">🇪🇺 EU-weit</option>
+           <option value="Deutschland">🇩🇪 Deutschland</option>
+           <option value="Österreich">🇦🇹 Österreich</option>
+           <option value="Schweiz">🇨🇭 Schweiz</option>
+           <option value="Frankreich">🇫🇷 Frankreich</option>
+           <option value="Niederlande">🇳🇱 Niederlande</option>
+           <option value="Belgien">🇧🇪 Belgien</option>
+           <option value="Italien">🇮🇹 Italien</option>
+         </select>
+       </div>
+       <div class="form-group">
+         <label class="form-label">Audit-Datum *</label>
+         <input type="date" class="form-input" id="newAuditDate">
+       </div>
+     </div>
+     <div class="form-row">
+       <div class="form-group">
+         <label class="form-label">Lead Auditor</label>
+         <input type="text" class="form-input" id="newAuditAuditor" placeholder="Name des Lead Auditors">
+       </div>
+       <div class="form-group">
+         <label class="form-label">Auditierter Bereich</label>
+         <select class="form-input" id="newAuditArea">
+           <option value="">Bereich wählen...</option>
+           <option>Pharmacovigilanz-System (QPPV/PSMF)</option>
+           <option>Werbemittel-Compliance (HWG/OMPA)</option>
+           <option>MAH-Pflichten & Zulassungsmanagement</option>
+           <option>GDP / Vertriebssystem</option>
+           <option>Qualitätsmanagementsystem (QMS)</option>
+           <option>IT-Systeme & Datenintegrität</option>
+           <option>Supplier / CMO-Audit</option>
+           <option>Gesamtunternehmen</option>
+         </select>
+       </div>
+     </div>
+     <div class="form-group">
+       <label class="form-label">Gesamt-Score / Ergebnis</label>
+       <div class="score-selector" id="scoreSelector">
+         <div class="score-opt" onclick="selectScore(this,'93')">✅ 90–100% Exzellent</div>
+         <div class="score-opt" onclick="selectScore(this,'82')">🟢 80–89% Gut</div>
+         <div class="score-opt" onclick="selectScore(this,'71')">🟡 70–79% Ausreichend</div>
+         <div class="score-opt" onclick="selectScore(this,'60')">🔴 &lt;70% Mangelhaft</div>
+       </div>
+     </div>
+     <div class="form-group">
+       <label class="form-label">Zusammenfassung / Executive Summary</label>
+       <textarea class="form-input" id="newAuditSummary" rows="3" placeholder="Kurze Zusammenfassung der wichtigsten Ergebnisse..."></textarea>
+     </div>
+     <div class="form-group">
+       <label class="form-label">Hauptbefunde (einer pro Zeile)</label>
+       <textarea class="form-input" id="newAuditFindings" rows="4" placeholder="[KRITISCH] Fehlende PSUR-Dokumentation für Produkt X&#10;[MAJOR] GPO-Übergabe nicht formal dokumentiert&#10;[MINOR] Schulungsnachweis für 2 Mitarbeiter fehlt&#10;[OBS] Verbesserungspotenzial bei CAPA-Tracking"></textarea>
+     </div>
+     <div class="form-row">
+       <div class="form-group">
+         <label class="form-label">Status</label>
+         <select class="form-input" id="newAuditStatus">
+           <option value="planned">○ Geplant</option>
+           <option value="in-progress">◑ In Bearbeitung</option>
+           <option value="completed" selected>✓ Abgeschlossen</option>
+         </select>
+       </div>
+       <div class="form-group">
+         <label class="form-label">Follow-Up Datum</label>
+         <input type="date" class="form-input" id="newAuditFollowup">
+       </div>
+     </div>
+     <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px;">
+       <button class="btn btn-ghost" onclick="closeNewAuditModal()">Abbrechen</button>
+       <button class="btn btn-gold" onclick="saveNewAudit()">✓ Audit speichern</button>
+     </div>
+   </div>
+ </div>
+</div>
+
+<!-- ===== AUDIT DETAIL MODAL ===== -->
+<div class="modal-overlay" id="auditDetailModal">
+ <div class="modal" id="auditDetailContent"></div>
+</div>
+```
+
+ </div>
+</main>
+
+<script>
+// =================== DATA ===================
+const countries = [
+ {
+   id: 'de', flag: '🇩🇪', name: 'Deutschland', entity: 'RegComply GmbH', status: 'active',
+   pills: [['MAH aktiv','pill-green'],['BfArM/PEI','pill-teal'],['AMNOG','pill-gold']],
+   tags: ['AMG','HWG','AMNOG','GKV-FinStG'],
+   laws: [
+     { cat: 'Zulassung', name: 'Arzneimittelgesetz (AMG)', desc: 'Zentrales Regelwerk für Entwicklung, Zulassung, Herstellung und Vertrieb von Arzneimitteln. §21 Zulassungspflicht. §63a: Pflicht zum Stufenplanbeauftragten (GPO). Zuständige Behörden: BfArM (chemisch-synthetische AM) und PEI (Biologika, Impfstoffe).', link: 'https://www.gesetze-im-internet.de/amg_1976/' },
+     { cat: 'Werbung', name: 'Heilmittelwerbegesetz (HWG)', desc: 'Regelt Werbung für Medikamente, Medizinprodukte und therapeutische Verfahren. §10: Werbeverbot für verschreibungspflichtige Rx-AM an Laien. §4 Pflichtangaben. §7: Verbot von Zuwendungen. Verstöße: bis zu €50.000 Bußgeld, bei Irreführung bis 1 Jahr Freiheitsstrafe.', link: 'https://www.gesetze-im-internet.de/heilmwerbg/' },
+     { cat: 'Werbung', name: 'Wettbewerbsrecht (UWG)', desc: 'Ergänzt das HWG. Verbot irreführender Werbung. Klagebefugnis für Mitbewerber und Verbände. Einstweilige Verfügungen in Pharmawerbefällen häufig genutzt. Schadensersatzansprüche möglich.', link: '#' },
+     { cat: 'Preisrecht', name: 'AMNOG (Arzneimittelmarktneuordnungsgesetz)', desc: 'Seit 01.01.2011. Zwei Phasen: (1) Frühe Nutzenbewertung durch G-BA (IQWiG) bei Markteinführung — Bewertungskategorien: erheblich, beträchtlich, gering, nicht quantifizierbar, kein Zusatznutzen, geringerer Nutzen. (2) Preisverhandlung MAH ↔ GKV-Spitzenverband ab Monat 7. MFG 2024: vertrauliche Erstattungspreise ab Jan 2025 möglich.', link: 'https://www.g-ba.de/english/benefitassessment/' },
+     { cat: 'Preisrecht', name: 'SGB V §35a — Freihe Preissetzung Monat 1-6', desc: 'Bei Markteinführung: Hersteller setzt initialen Preis frei für die ersten 12 Monate (ab 2025 nach MFG-Reform). Ab Monat 7 gilt verhandelter Erstattungspreis. Kein AMNOG: OTC-Präparate, Produkte ohne neue Wirkstoffe.', link: '#' },
+     { cat: 'Pharmacovigilanz', name: 'AMG §63a — Stufenplanbeauftragter', desc: 'Pflicht für alle Inhaber nationaler Zulassungen (MRP/DCP-Verfahren). Verantwortlich für Qualitätsmängelerfassung, Rückrufe, Fälschungsmeldungen. Kontaktperson für BfArM/PEI. Von EU-QPPV abzugrenzen (der QPPV kann GPO-Funktion bei zentralen Zulassungen abdecken).', link: '#' },
+     { cat: 'Selbstregulierung', name: 'FSA-Kodex', desc: 'Freiwillige Selbstkontrolle Arzneimittelindustrie. Kodex zur Zusammenarbeit mit Fachkreisen (zuletzt Nov. 2024 geändert), als Wettbewerbsregel vom Bundeskartellamt anerkannt. Bindend für VFA/FSA-Mitglieder.', link: '#' },
+   ],
+   contacts: [
+     { icon: '🏛', name: 'BfArM', role: 'Bundesinstitut für Arzneimittel und Medizinprodukte', org: 'Zulassung chem.-synthetischer AM, nationale Verfahren', email: 'poststelle@bfarm.de', phone: '+49 228 99 307-0' },
+     { icon: '🔬', name: 'Paul-Ehrlich-Institut (PEI)', role: 'Bundesbehörde: Biologika, Impfstoffe, Blutprodukte', org: 'Langen/Hessen', email: 'info@pei.de', phone: '+49 6103 77-0' },
+     { icon: '💊', name: 'G-BA', role: 'Gemeinsamer Bundesausschuss — AMNOG Nutzenb.', org: 'Berlin', email: 'info@g-ba.de', phone: '+49 30 275838-0' },
+     { icon: '👩‍⚖️', name: 'Dr. Sarah Müller', role: 'Regulatory Affairs Director', org: 'RegComply GmbH', email: 's.mueller@regcomply.de', phone: '+49 89 1234-567' },
+   ],
+   pricing: { system: 'AMNOG', authority: 'G-BA + GKV-Spitzenverband', hta: 'Frühe Nutzenbewertung (IQWiG)', timeline: '0-6 Mon. freier Preis, ab Monat 7 verhandelter Erstattungspreis', notes: 'MFG 2024: vertrauliche Erstattungspreise ab Jan 2025. Orphan Drug-Ausnahme bis €30 Mio. Jahresumsatz.' },
+   advertising: { law: 'HWG + UWG', rx: 'An Laien verboten (§10 HWG)', otc: 'Erlaubt mit Pflichtangaben (§4 HWG)', hcp: 'Erlaubt mit Pflichtangaben, kein "Rx-Push" an Laien', gifts: 'Max. €1 (geringwertig, §7 HWG), Wissenschaftl. Meetings OK', digital: 'Online-Werbung: gleiche HWG-Regeln. Social Media + Influencer → strenge HWG-Compliance. Rx-AM: nur passwortgeschützte HCP-Portale.' },
+ },
+ {
+   id: 'at', flag: '🇦🇹', name: 'Österreich', entity: 'RegComply Austria GmbH', status: 'active',
+   pills: [['MAH aktiv','pill-green'],['AGES/BASG','pill-teal'],['EKO-Erstattung','pill-gold']],
+   tags: ['AMG-AT','AWEG','EKO','FMA'],
+   laws: [
+     { cat: 'Zulassung', name: 'Österreichisches Arzneimittelgesetz (AMG-AT)', desc: 'Nationales Zulassungsrecht. Zuständige Behörde: AGES/BASG. EU-Zulassungen gelten unmittelbar. Für nationales Verfahren: BASG als nationale Behörde.', link: '#' },
+     { cat: 'Werbung', name: 'Arzneimittelwerbegesetz (AWEG)', desc: 'Österreichisches Pendant zum deutschen HWG. Werbeverbot für Rx-AM an Laien. §51 AWEG: Informationsbeauftragte müssen ausreichend ausgebildet sein. §54 AWEG: Verbot unzulässiger Zuwendungen an Angehörige der Heilberufe.', link: '#' },
+     { cat: 'Preisrecht', name: 'Erstattungskodex (EKO)', desc: 'Arzneimittelerstattung über den Erstattungskodex (Grüner Kasten: unbedingt, Gelber Kasten: bedingt). Einreichung beim BASG/HEK. Nutzennachweis für Erstattung erforderlich. Preisfestsetzung basiert auf EU-Referenzpreisen.', link: '#' },
+     { cat: 'Pharmacovigilanz', name: 'LPPV-Pflicht Österreich', desc: 'Local Person for Pharmacovigilance. Residenzpflicht in Österreich. Direkter Ansprechpartner für AGES/BASG. Sprachkenntnisse Deutsch erforderlich. Zusätzlich zur EU QPPV-Pflicht.', link: '#' },
+   ],
+   contacts: [
+     { icon: '🏛', name: 'AGES/BASG', role: 'Bundesamt für Sicherheit im Gesundheitswesen', org: 'Zulassung + Aufsicht, Wien', email: 'infoaustria@ages.at', phone: '+43 50 555-0' },
+     { icon: '👨‍💼', name: 'Mag. Thomas Brandt', role: 'Country Lead Austria', org: 'RegComply Austria GmbH', email: 't.brandt@regcomply.at', phone: '+43 1 5678-901' },
+   ],
+   pricing: { system: 'EKO (Erstattungskodex)', authority: 'BASG + HEK (Heilmittel-Evaluierungs-Kommission)', hta: 'Nutzennachweis bei EKO-Einreichung', timeline: 'Frei. Preis → EKO-Aufnahme für GKV-Erstattung', notes: 'Internation. Referenzpreissetzung aus EU-Märkten. Grüner/Gelber Kasten-System.' },
+   advertising: { law: 'AWEG + UWG-AT', rx: 'An Laien verboten', otc: 'Erlaubt mit Pflichtangaben', hcp: 'Erlaubt, FSA-ähnliche Regeln für Zuwendungen', gifts: 'Geringwertige Zuwendungen gem. §54 AWEG', digital: 'Gleiche Grundregeln wie DE. Rx-Werbung nur HCP-portale.' },
+ },
+ {
+   id: 'ch', flag: '🇨🇭', name: 'Schweiz', entity: 'RegComply AG (in Aufbau)', status: 'review',
+   pills: [['MAH ausstehend','pill-amber'],['Swissmedic','pill-teal'],['Lokale Entität nötig','pill-red']],
+   tags: ['HMG/TPA','OMPA','KVG','Swissmedic'],
+   laws: [
+     { cat: 'Zulassung', name: 'Heilmittelgesetz (HMG/TPA)', desc: 'Swiss Therapeutic Products Act. Swissmedic als nationale Zulassungsbehörde. KEIN EU-Pass! Eigener Antrag zwingend. Lokale juristische Entität in der Schweiz Voraussetzung. Kantonale Inspektorate führen regelmäßige Inspektionen durch. Standard: mind. 12 Monate Bearbeitungszeit.', link: 'https://www.swissmedic.ch' },
+     { cat: 'Werbung', name: 'Heilmittelwerbe-Verordnung (OMPA/AWV)', desc: 'Swissmedic-Regulierung der Werbung. Art. 32 TPA: Werbung nur für zugelassene Indikationen. Rx-AM: Werbung an Laien verboten. OTC-Werbung erlaubt mit Pflichtangaben (Produktname, Indikation, Hinweis auf Beipackzettel). Analgetika/Schlafmittel mit Missbrauchspotenzial: Vorherige Swissmedic-Genehmigung.', link: '#' },
+     { cat: 'Preisrecht', name: 'KVG — Spezialitätenliste (SL)', desc: 'Erstattung über Spezialitätenliste. BAG (Bundesamt für Gesundheit) entscheidet über SL-Aufnahme nach WZW-Kriterien (Wirksamkeit, Zweckmäßigkeit, Wirtschaftlichkeit). Dreijährliche Überprüfung. Preisvergleich mit Referenzländern DE, AT, FR, UK, DK, NL, BE.', link: '#' },
+     { cat: 'Pharmacovigilanz', name: 'PV-System Swissmedic', desc: 'Separates PV-System (nicht EudraVigilance). Meldepflicht an Swissmedic direkt. Responsible Person (RP) für Schweizer Markt zwingend. PSUR: innerhalb 4 Jahre nach Erstzulassung für neue Wirkstoffe. Kantonal: Inspektionen des lokalen RP.', link: '#' },
+     { cat: 'Sonderregel', name: 'TPITO — Integritätspflichten', desc: 'Verordnung über Integrität und Transparenz bei Heilmitteln (April 2019). Verbot des Versprechens/Annehmens unzulässiger Vorteile für Fachpersonen. 2025: BAG plant Ausweitung auf Medizinprodukte.', link: '#' },
+   ],
+   contacts: [
+     { icon: '🏛', name: 'Swissmedic', role: 'Schweizerische Zulassungs- und Aufsichtsbehörde', org: 'Bern', email: 'info@swissmedic.ch', phone: '+41 58 462 02 11' },
+     { icon: '🏥', name: 'BAG (Bundesamt für Gesundheit)', role: 'Spezialitätenliste, KVG-Erstattung', org: 'Bern', email: 'info@bag.admin.ch', phone: '+41 58 462 90 22' },
+     { icon: '👩‍💼', name: 'Dr. Anna Steiner', role: 'External Legal Counsel CH', org: 'Steiner & Partner, Zürich', email: 'a.steiner@sp-legal.ch', phone: '+41 44 789-0123' },
+   ],
+   pricing: { system: 'KVG Spezialitätenliste (SL)', authority: 'BAG (Bundesamt für Gesundheit)', hta: 'WZW-Kriterien (Wirksamkeit, Zweckmäßigkeit, Wirtschaftlichkeit)', timeline: 'Freier Preis → SL-Antrag für Kassenerstattung. Dreijährl. Überprüfung.', notes: 'Referenzpreissetzung: DE, AT, FR, UK, DK, NL, BE. Kein AMNOG-äquivalentes Verfahren. Direkte Preisverhandlung mit BAG.' },
+   advertising: { law: 'OMPA/AWV + TPA Art. 32', rx: 'An Laien verboten', otc: 'Erlaubt mit Pflichtangaben, für KAT C/D: Swissmedic-Hinweis', hcp: 'Erlaubt, keine vorherige Genehmigung, aber nur zugelassene Indikationen', gifts: 'Verboten über TPITO. Wissenschaftl. Meetings: erlaubt wenn wissenschaftl. Charakter', digital: 'Professionelle Werbung: Passwortschutz + Zugang nur für HCPs. Keine öffentl. Zugänglichkeit.' },
+ },
+ {
+   id: 'fr', flag: '🇫🇷', name: 'Frankreich', entity: 'RegComply SAS (Aufbau)', status: 'review',
+   pills: [['MAH ausstehend','pill-amber'],['ANSM','pill-teal'],['Exploitant nötig','pill-gold']],
+   tags: ['CSP','Code de la Santé','HAS','ANSM'],
+   laws: [
+     { cat: 'Zulassung', name: 'Code de la Santé Publique (CSP)', desc: 'Gesundheitsgesetzbuch Frankreich. Regelt Zulassung, Vertrieb, Werbung. Zuständige Behörde: ANSM (Agence Nationale de Sécurité du Médicament). Exploitant-Zulassung: Pflicht für jedes in FR vermarktete AM. Exploitant kann separate Entität vom MAH sein.', link: '#' },
+     { cat: 'Werbung', name: 'Werberegelungen CSP Art. L.5122', desc: 'Rx-Werbung an Laien verboten. Werbung an HCPs stark reglementiert. Meldepflicht bestimmter Werbematerialien bei ANSM. Selbstregulierungscode: CEMIP (Comité Economique des Médicaments Information Professionnelle). Transparenzpflichten für Zahlungen an HCPs (Sunshine Act FR).', link: '#' },
+     { cat: 'Preisrecht', name: 'ATU/HAS-Bewertung + CEPS', desc: 'Erstattung über Remboursement-Antrag. HAS (Haute Autorité de Santé) bewertet medizinischen Nutzen (SMR) und Verbesserung gegenüber Standard (ASMR I-V). CEPS (Comité Economique des Produits de Santé) verhandelt Preis mit pharma. Unternehmen. Tiers payant-System.', link: '#' },
+     { cat: 'Pharmacovigilanz', name: 'LPPV Frankreich — ANSM-Meldepflichten', desc: 'LPPV mit Residenzpflicht in Frankreich. Direkte Verantwortung ggü. ANSM. Frz. Sprachkenntnisse zwingend. Regionale Vigilanzzentren (CRPV). Zusätzlich nationaler PSUR-Einreichungsprozess.', link: '#' },
+   ],
+   contacts: [
+     { icon: '🏛', name: 'ANSM', role: 'Agence Nationale de Sécurité du Médicament', org: 'Saint-Denis', email: 'information.info@ansm.sante.fr', phone: '+33 1 55 87 30 00' },
+     { icon: '🏥', name: 'HAS', role: 'Haute Autorité de Santé — HTA / SMR-Bewertung', org: 'Saint-Denis', email: 'contact.has@has-sante.fr', phone: '+33 1 55 93 70 00' },
+     { icon: '👨‍💼', name: 'Jean-Pierre Dubois', role: 'External Pharma Advisor', org: 'Cabinet Dubois & Associés, Paris', email: 'jp.dubois@cabinet-dubois.fr', phone: '+33 1 4567-8901' },
+   ],
+   pricing: { system: 'HAS-Bewertung + CEPS-Preisverhandlung', authority: 'HAS (SMR/ASMR) + CEPS (Preise)', hta: 'SMR (Service Médical Rendu) + ASMR I-V Einstufung', timeline: 'ATU → Zulassung → HAS-Bewertung → CEPS-Verhandlung → Erstattung', notes: 'Tiers payant: direktes Abrechnungssystem mit Krankenkassen. Exploitant muss Preisverhandlung führen.' },
+   advertising: { law: 'CSP Art. L.5122 + Sunshine Act', rx: 'An Laien verboten', otc: 'Erlaubt mit Pflichtangaben', hcp: 'Stark reglementiert, Meldepflicht bei ANSM für bestimmte Materialien', gifts: 'Sunshine Act: alle Zahlungen/Vorteile >10€ an HCPs öffentlich melden', digital: 'Online-Werbung: gleiche Regeln. Transparenzpflichten für digitale Kampagnen.' },
+ },
+ {
+   id: 'nl', flag: '🇳🇱', name: 'Niederlande', entity: 'Rollout Q3 2025', status: 'planned',
+   pills: [['Geplant','pill-red'],['CBG-MEB','pill-teal']],
+   tags: ['Geneesmiddelenwet','CGR','ZIN'],
+   laws: [
+     { cat: 'Zulassung', name: 'Geneesmiddelenwet (GW)', desc: 'Niederländisches Arzneimittelgesetz. Zuständige Behörde: CBG-MEB (College ter Beoordeling van Geneesmiddelen). EU-CP-Zulassungen direkt gültig. Für nationales Verfahren/Werbung: MEB als Aufsicht.', link: '#' },
+     { cat: 'Werbung', name: 'Zelfregulering CGR', desc: 'Stichting CGR (Code Geneesmiddelenreclame) regelt Pharmawerbung. CGR-Code der pharmazeutischen Industrie. Rx-Werbung an Laien verboten (EU-Recht). Selbstregulierungssystem für HCP-Werbung.', link: '#' },
+     { cat: 'Preisrecht', name: 'ZIN (Zorginstituut Nederland)', desc: 'HTA und Erstattungsentscheidungen. Therapeutische Wert-Beurteilung (TW). Farmer-Register für Erstattungspreise (Geneesmiddelenvergoedingssysteem GVS). Preisgesetz (Wet Geneesmiddelenprijzen WGP) begrenzt Maximalpreise.', link: '#' },
+   ],
+   contacts: [
+     { icon: '🏛', name: 'CBG-MEB', role: 'College ter Beoordeling van Geneesmiddelen', org: 'Den Haag', email: 'info@cbg-meb.nl', phone: '+31 88 224 8000' },
+   ],
+   pricing: { system: 'WGP Maximalpreise + GVS Erstattung', authority: 'ZIN (HTA) + Ministerie VWS (Preisfestsetzung)', hta: 'Therapeutische Wertbewertung durch ZIN', timeline: 'WGP-Referenzpreise → GVS-Erstattungsantrag → ZIN-Bewertung', notes: 'Referenzpreise: BE, DE, FR, UK. Strenge Preiskontrollen.' },
+   advertising: { law: 'Geneesmiddelenwet + CGR-Code', rx: 'Verboten an Laien', otc: 'CGR-Code-Konformität', hcp: 'CGR-Selbstregulierung', gifts: 'CGR-Code: Schwellenwerte für Zuwendungen', digital: 'CGR gilt auch für Online-Kanäle.' },
+ },
+ {
+   id: 'be', flag: '🇧🇪', name: 'Belgien', entity: 'Rollout Q4 2025', status: 'planned',
+   pills: [['Geplant','pill-red'],['FAMHP/AFMPS','pill-teal']],
+   tags: ['AMB-Code','FAMHP','RIZIV/INAMI'],
+   laws: [
+     { cat: 'Zulassung', name: 'Königliches Dekret (AR Geneesmiddelen)', desc: 'Belgisches Arzneimittelrecht. Zuständige Behörde: FAMHP/AFMPS (Federal Agency for Medicines and Health Products). EU-CP direkt gültig.', link: '#' },
+     { cat: 'Werbung', name: 'AM-Code FAMHP', desc: 'Belgischer Pharmawerbecode. Rx-Werbung an Laien verboten. HCP-Werbung: strengere Anforderungen als EU-Minimum. Meldepflicht bei FAMHP.', link: '#' },
+     { cat: 'Preisrecht', name: 'RIZIV/INAMI Erstattungssystem', desc: 'Erstattungsantrag bei RIZIV/INAMI. Zwei Kategorien: B (Rx) und C (OTC). Terugbetaling-Committee (CT/TC) bewertet Nutzen und Preis.', link: '#' },
+   ],
+   contacts: [
+     { icon: '🏛', name: 'FAMHP/AFMPS', role: 'Federal Agency for Medicines and Health Products', org: 'Brüssel', email: 'info@famhp.be', phone: '+32 2 524 80 00' },
+   ],
+   pricing: { system: 'RIZIV/INAMI Erstattung', authority: 'CT/TC + Minister VGZ', hta: 'Nutzenbewertung durch CT/TC', timeline: 'Freie Preissetzung → RIZIV-Antrag → CT-Bewertung → Erstattung', notes: 'Preiskontrollen. Referenz: DE, AT, FR, NL, UK.' },
+   advertising: { law: 'AR 78 + FAMHP-Code', rx: 'Verboten an Laien', otc: 'Pflichtangaben', hcp: 'FAMHP-Meldepflicht bestimmter Materialien', gifts: 'Strengere Schwellenwerte als EU-Minimum', digital: 'Gleiche Regeln wie Print/TV.' },
+ },
+ {
+   id: 'it', flag: '🇮🇹', name: 'Italien', entity: 'Evaluationsphase', status: 'planned',
+   pills: [['Evaluation','pill-red'],['AIFA','pill-teal']],
+   tags: ['D.Lgs. 219/2006','AIFA','SSN/Prontuario'],
+   laws: [
+     { cat: 'Zulassung', name: 'D.Lgs. 219/2006', desc: 'Umsetzung Directive 2001/83/EC in italienisches Recht. Zuständige Behörde: AIFA (Agenzia Italiana del Farmaco). Für EU-CP: direkt gültig. Nationale Verfahren: AIFA-Einreichung.', link: '#' },
+     { cat: 'Werbung', name: 'AIFA Werberichtlinien', desc: 'Ministerialerlass Pharmawerbung. Rx-Werbung an Laien verboten. Werbematerialien für HCPs: Vorabgenehmigung durch AIFA erforderlich (im Gegensatz zu DE/AT). Transparenzpflichten nach D.Lgs. 66/2019.', link: '#' },
+     { cat: 'Preisrecht', name: 'SSN Prontuario Farmaceutico (AIFA)', desc: 'Erstattung über AIFA Klassen A und H. Klasse A: GKV-Erstattung ambulant. Klasse H: nur Krankenhausversorgung. AIFA-Preisverhandlung für Erstattungspreise. Ausgabendeckel für Pharmaindustrie.', link: '#' },
+   ],
+   contacts: [
+     { icon: '🏛', name: 'AIFA', role: 'Agenzia Italiana del Farmaco', org: 'Rom', email: 'aifa@aifa.gov.it', phone: '+39 06 5978 401' },
+   ],
+   pricing: { system: 'AIFA Klassen A/H + Preisverhandlung', authority: 'AIFA', hta: 'Valore Terapeutico Aggiunto (VTA)', timeline: 'Zulassung → AIFA-Klassen-Antrag → Preisverhandlung → Einbindung in Prontuario', notes: 'Ausgabendeckel für Pharma (payback). Besondere Herausforderung für marktfremde Firmen.' },
+   advertising: { law: 'D.Lgs. 219/2006 + Ministerialdekret', rx: 'Verboten an Laien', otc: 'Vorabgenehmigung MINSAL erforderlich', hcp: '⚠️ Vorabgenehmigung AIFA für Werbematerialien!', gifts: 'D.Lgs. 66/2019 Transparenz: meldepflichtig', digital: 'Gleiche Vorabgenehmigungspflicht für digitale HCP-Werbung.' },
+ },
+];
+
+const allContacts = [
+ { icon: '🏛', name: 'EMA', role: 'European Medicines Agency', org: 'EU-weit — Zentrales Verfahren (CP)', email: 'info@ema.europa.eu', phone: '+31 88 781 6000', type: 'authority', country: '🇪🇺' },
+ { icon: '🏛', name: 'BfArM', role: 'Bundesinstitut für Arzneimittel u. Medizinprodukte', org: 'Deutschland', email: 'poststelle@bfarm.de', phone: '+49 228 99 307-0', type: 'authority', country: '🇩🇪' },
+ { icon: '🔬', name: 'Paul-Ehrlich-Institut (PEI)', role: 'Biologika, Impfstoffe, Blutprodukte DE', org: 'Langen', email: 'info@pei.de', phone: '+49 6103 77-0', type: 'authority', country: '🇩🇪' },
+ { icon: '💊', name: 'G-BA', role: 'Gemeinsamer Bundesausschuss — AMNOG', org: 'Berlin', email: 'info@g-ba.de', phone: '+49 30 275838-0', type: 'authority', country: '🇩🇪' },
+ { icon: '🏛', name: 'AGES/BASG', role: 'Bundesamt f. Sicherheit im Gesundheitswesen AT', org: 'Wien', email: 'infoaustria@ages.at', phone: '+43 50 555-0', type: 'authority', country: '🇦🇹' },
+ { icon: '🏛', name: 'Swissmedic', role: 'Schweiz. Zulassungs- und Aufsichtsbehörde', org: 'Bern', email: 'info@swissmedic.ch', phone: '+41 58 462 02 11', type: 'authority', country: '🇨🇭' },
+ { icon: '🏥', name: 'BAG', role: 'Bundesamt für Gesundheit — Spezialitätenliste', org: 'Bern', email: 'info@bag.admin.ch', phone: '+41 58 462 90 22', type: 'authority', country: '🇨🇭' },
+ { icon: '🏛', name: 'ANSM', role: 'Agence Nationale de Sécurité du Médicament', org: 'Saint-Denis, Frankreich', email: 'information.info@ansm.sante.fr', phone: '+33 1 55 87 30 00', type: 'authority', country: '🇫🇷' },
+ { icon: '🏥', name: 'HAS', role: 'Haute Autorité de Santé — HTA / SMR', org: 'Frankreich', email: 'contact.has@has-sante.fr', phone: '+33 1 55 93 70 00', type: 'authority', country: '🇫🇷' },
+ { icon: '🏛', name: 'CBG-MEB', role: 'College ter Beoordeling van Geneesmiddelen NL', org: 'Den Haag', email: 'info@cbg-meb.nl', phone: '+31 88 224 8000', type: 'authority', country: '🇳🇱' },
+ { icon: '🏛', name: 'FAMHP/AFMPS', role: 'Federal Agency for Medicines and Health Products BE', org: 'Brüssel', email: 'info@famhp.be', phone: '+32 2 524 80 00', type: 'authority', country: '🇧🇪' },
+ { icon: '🏛', name: 'AIFA', role: 'Agenzia Italiana del Farmaco', org: 'Rom', email: 'aifa@aifa.gov.it', phone: '+39 06 5978 401', type: 'authority', country: '🇮🇹' },
+ { icon: '👩‍⚖️', name: 'Dr. Sarah Müller', role: 'Regulatory Affairs Director', org: 'RegComply GmbH, DE', email: 's.mueller@regcomply.de', phone: '+49 89 1234-567', type: 'internal', country: '🇩🇪' },
+ { icon: '👨‍💼', name: 'Mag. Thomas Brandt', role: 'Country Lead Austria', org: 'RegComply Austria GmbH', email: 't.brandt@regcomply.at', phone: '+43 1 5678-901', type: 'internal', country: '🇦🇹' },
+ { icon: '👩‍💼', name: 'Dr. Anna Steiner', role: 'External Legal Counsel CH', org: 'Steiner & Partner, Zürich', email: 'a.steiner@sp-legal.ch', phone: '+41 44 789-0123', type: 'legal', country: '🇨🇭' },
+ { icon: '👨‍💼', name: 'Jean-Pierre Dubois', role: 'External Pharma Advisor FR', org: 'Cabinet Dubois & Associés, Paris', email: 'jp.dubois@cabinet-dubois.fr', phone: '+33 1 4567-8901', type: 'legal', country: '🇫🇷' },
+ { icon: '👩‍💻', name: 'Dr. Lena Hofmann', role: 'EU QPPV', org: 'RegComply GmbH', email: 'l.hofmann@regcomply.de', phone: '+49 89 1234-890', type: 'internal', country: '🇪🇺' },
+ { icon: '👨‍💼', name: 'Klaus Schneider', role: 'Head of Regulatory Affairs Europe', org: 'RegComply Gruppe', email: 'k.schneider@regcomply.eu', phone: '+49 89 1234-100', type: 'internal', country: '🇪🇺' },
+];
+
+const updates = [
+ { id: 1, sev: 'critical', date: '02 Feb 2025', scope: '🇪🇺 EU-weit', title: 'EU AI Act: Verbotene KI-Praktiken ab sofort wirksam', desc: 'Seit 2. Februar 2025 gelten die Verbote für inakzeptable Risikosysteme unter dem EU AI Act. Pharma-KI-Systeme (z.B. für Dosierungsempfehlungen, Diagnostik-Support) sind zu inventarisieren und auf Hochrisiko-Einstufung zu prüfen. Konformitätsbewertung für High-Risk-KI bis August 2026.', action: 'KI-System-Inventar erstellen, Risikoklassifizierung starten' },
+ { id: 2, sev: 'high', date: '01 Jan 2025', scope: '🇩🇪 Deutschland', title: 'MFG 2024: Vertrauliche AMNOG-Erstattungspreise eingeführt', desc: 'Das Medizinforschungsgesetz (MFG) 2024 ermöglicht ab Januar 2025 vertrauliche Erstattungspreise im AMNOG-Verfahren. Ziel: Verhinderung unerwünschter internationaler Referenzpreissetzung. Gilt für Preisvereinbarungen ab Jan 2025. Neue Verknüpfung von Preis und lokalem Klinischen-Trial-Investment.', action: 'AMNOG-Strategie für 2025 überarbeiten, Vertraulichkeitsoption prüfen' },
+ { id: 3, sev: 'high', date: '15 Jan 2024', scope: '🇨🇭 Schweiz', title: 'Swissmedic: Aktualisierte TempMA-Guidance (TPA Art. 9a)', desc: 'Swissmedic überarbeitete die Guidance für temporäre Zulassungen (TempMA) zweifach innerhalb von 6 Monaten (Sep 2023 + Jan 2024). Neue Kriterien für Gleichwertigkeit. TempMA nun möglich wenn Mitbewerber bereits TempMA hat. Wichtig für Zulassungsstrategie in CH.', action: 'CH-Zulassungsstrategie auf TempMA-Optionen prüfen' },
+ { id: 4, sev: 'medium', date: '2025 (geplant)', scope: '🇨🇭 Schweiz', title: 'TPITO: Erweiterung auf Medizinprodukte geplant', desc: 'Der Bundesrat plant für 2025 eine Änderung der TPITO, um den Anwendungsbereich von verschreibungspflichtigen Arzneimitteln auf Medizinprodukte auszuweiten. Auswirkungen auf Zuwendungsverbote und Transparenzpflichten gegenüber HCPs im Medizinprodukte-Bereich.', action: 'Compliance-Check für Medizinprodukt-Aktivitäten in CH' },
+];
+
+// =================== AI KNOWLEDGE ===================
+const aiKB = {
+ mah: `**Marketing Authorization Holder (MAH) — Kernpflichten:**
+
+Der MAH trägt die volle regulatorische Verantwortung für ein Arzneimittel in Europa. Bei Übernahme einer bestehenden Zulassung sind folgende Schritte erforderlich:
+
+1. **Variation Application** beim zuständigen Zulassungsinhaber + Behörden (Type II Variation für MAH-Wechsel)
+2. **EU QPPV benennen** — Pflicht, in EEA ansässig, 24/7 erreichbar (Art. 23 VO 726/2004)
+3. **PSMF erstellen** — Pharmacovigilance System Master File
+4. **EudraVigilance-Registrierung** für ICSR-Meldungen
+5. **WDA (Wholesale Distribution Authorization)** pro EU-Markt
+6. **QP (Qualified Person)** für Chargenfreigabe benennen
+7. **Nationales Compliance-Setup**: GPO (DE), LPPV (AT/FR), Exploitant (FR), RP (CH)
+
+📋 Rechtsbasis: Directive 2001/83/EC, VO (EC) 726/2004
+Kontakt intern: Klaus Schneider (k.schneider@regcomply.eu), QPPV: Dr. Lena Hofmann (l.hofmann@regcomply.de)`,
+
+ amnog: `**AMNOG-Verfahren Deutschland — Detailübersicht:**
+
+🇩🇪 **Ablauf:**
+1. **Tag 0 (Markteinführung):** MAH reicht Nutzendossier bei G-BA ein
+2. **Monat 1-6:** Freier Herstellerpreis (ab 2025 erste 12 Monate nach MFG-Änderung)
+3. **Monat 6:** G-BA-Beschluss zum Zusatznutzen (Kategorien: erheblich / beträchtlich / gering / nicht quantifizierbar / kein / geringerer Nutzen)
+4. **Monat 7-12:** Preisverhandlungen MAH ↔ GKV-Spitzenverband
+5. **Bei Scheitern:** Schiedsverfahren beim Schiedsstelle
+
+🆕 **MFG 2024 (ab Jan 2025):**
+- Vertrauliche Erstattungspreise möglich (kein öffentlicher Preis mehr)
+- Preisanreize für lokale klinische Studien in DE
+- Ziel: Verhinderung internationaler Referenzpreissetzung
+
+**Ausnahme Orphan Drugs:** Zusatznutzen durch MA unterstellt bis Jahresumsatz €30 Mio.
+
+Behörde: G-BA (info@g-ba.de) + IQWiG (nutzen@iqwig.de)`,
+
+ qppv: `**EU QPPV vs. GPO (Stufenplanbeauftragter) — Unterschiede:**
+
+**EU QPPV (Qualified Person Responsible for Pharmacovigilance):**
+- Pflicht für ALLE MAH mit EU-Zulassung (Art. 23 VO 726/2004, Art. 104 Dir. 2001/83/EC)
+- Muss in EEA ansässig sein
+- 24/7 erreichbar
+- Persönlich haftbar für das PV-System
+- XEVMPD-Datenbank: Name + Kontakt meldepflichtig
+- Zuständig für: PSMF-Maintenance, EudraVigilance, ICSR, PSUR, Signaldetektion
+- Unser QPPV: Dr. Lena Hofmann (l.hofmann@regcomply.de)
+
+**GPO — Stufenplanbeauftragter (Deutschland):**
+- Pflicht nach §63a AMG nur für NATIONALE Zulassungen (DCP/MRP-Verfahren in DE)
+- NICHT bei zentraler EMA-Zulassung erforderlich (dort kann QPPV GPO-Funktion abdecken)
+- Aufgaben: Qualitätsmängelerfassung, Rückrufe, Fälschungsbenachrichtigung, Vor-Zulassungsüberwachung
+- Muss in DE ansässig sein
+
+→ Bei EMA-Zulassung: nur QPPV + evtl. nationale Kontaktperson
+→ Bei nationaler/DCP/MRP-Zulassung in DE: QPPV + GPO (§63a AMG)`,
+
+ swissmedic: `**Swissmedic Zulassungsanforderungen — Schweiz:**
+
+🇨🇭 **WICHTIG: Kein EU-Pass!** Swissmedic erkennt EU/EMA-Zulassungen NICHT an.
+
+**Voraussetzungen:**
+- Lokale juristische Entität in der Schweiz ist PFLICHT für Zulassungsantrag
+- Swissmedic-Antrag nach HMG/TPA erforderlich
+- Bearbeitungszeit Standard: mind. 12 Monate (Beschleunigtes Verfahren: 20% schneller, aber höhere Gebühren)
+- Einreichung: eCTD-Format, mind. 1 Schweizer Amtssprache (DE, FR oder IT)
+
+**Zulassungsarten:**
+- Standardverfahren (neue Wirkstoffe): Vollständige Dokumentation
+- Vereinfachtes Verfahren: Für Wirkstoffe mit mind. 10 Jahren EU/EFTA-Zulassung
+- TempMA (Art. 9a TPA): Temporäre Zulassung wenn kein equivalentes Produkt verfügbar
+
+**Pharmacovigilanz CH:**
+- Responsible Person (RP) für CH zwingend
+- Swissmedic-PV-System ≠ EudraVigilance
+- Kantonale Inspektorate führen Vor-Ort-Prüfungen durch
+
+**Preissystem:**
+- Spezialitätenliste (SL) für Kassenerstattung (KVG/LAMal)
+- BAG verhandelt Preise nach WZW-Kriterien
+- Referenzpreise: DE, AT, FR, UK, DK, NL, BE
+
+Kontakt: Swissmedic (info@swissmedic.ch, +41 58 462 02 11), External Counsel: Dr. Anna Steiner (a.steiner@sp-legal.ch)`,
+
+ hwg: `**HWG — Heilmittelwerbegesetz Deutschland:**
+
+📢 **Grundprinzip:** Pharmawerbung muss wahrheitsgemäß, sachlich und wissenschaftlich belegt sein.
+
+**Rx-Arzneimittel (Verschreibungspflichtig):**
+- §10 HWG: Werbung an LAIEN verboten
+- An Ärzte, Apotheker, HCPs: Erlaubt mit Pflichtangaben (§4 HWG)
+- Pflichtangaben HCP-Werbung (§4): Produktname, Wirkstoffe, Indikationen, Kontraindikationen, Nebenwirkungen, Hersteller
+
+**OTC-Arzneimittel:**
+- Werbung an Laien erlaubt, aber mit strengen Anforderungen
+- §11 HWG: Verbotene Werbeaussagen an Laien (z.B. "heilt garantiert", Vorher/Nachher-Bilder)
+- Pflichtangaben Laienwerbung: Produktname, Indikation, Warnhinweise
+
+**Zuwendungen (§7 HWG):**
+- Grundsätzlich verboten
+- Ausnahmen: geringwertige Werbemittel (max. €1), Sponsoring wissenschaftl. Kongresse, Schulungsmaterialien
+
+**Sanktionen:**
+- Irreführende Werbung: bis 1 Jahr Freiheitsstrafe
+- Verwaltungsrecht: bis €50.000 Bußgeld
+- Wettbewerbsrecht: einstweilige Verfügungen durch Mitbewerber
+
+Zuständige Behörde: BfArM (BfArM), regional: Regierungspräsidien
+Selbstregulierung: FSA-Kodex (für VFA/FSA-Mitglieder bindend)`,
+
+ exploitant: `**Frankreich — Exploitant und ANSM-Anforderungen:**
+
+🇫🇷 **Exploitant-Zulassung (Code de la Santé Publique):**
+- PFLICHT für jedes in Frankreich vermarktete Arzneimittel
+- "Exploitation" = jede Vermarktungsaktivität inkl. Qualitätsmanagement, PV, Chargenfreigabe
+- Exploitant KANN eine separate Entität vom MAH sein (wichtig für Flexibilität)
+- Responsible Person (RP) des Exploitant: verantwortlich für lokale Compliance
+
+**Anforderungen Exploitant:**
+- Französische juristische Entität oder EU-Entität mit Frankreich-Sitz
+- Responsable Person muss in FR ansässig sein, Französisch sprechen
+- Zugelassen bei ANSM
+
+**LPPV Frankreich:**
+- Residenzpflicht in Frankreich
+- Direkte Verantwortung gegenüber ANSM
+- Pflichtsprache: Französisch
+- Regionale Vigilanzzentren (CRPV) als lokale Partner
+
+**Werbung FR:**
+- ANSM-Meldepflicht für bestimmte Werbematerialien
+- Sunshine Act: Alle Zahlungen >€10 an HCPs öffentlich melden (Transparence-Santé)
+- Rx-Werbung an Laien verboten
+
+Kontakt ANSM: information.info@ansm.sante.fr, +33 1 55 87 30 00
+HAS: contact.has@has-sante.fr (für HTA/SMR-Bewertungen)`,
+
+ psur: `**PSUR-Fristen als MAH — Übersicht:**
+
+📊 **PSUR (Periodic Safety Update Report) — EU Fristen:**
+
+**Standard-Fristen (Artikel 107b Dir. 2001/83/EC):**
+- 1. PSUR: innerhalb 6 Monate nach Erstzulassung (für neue Wirkstoffe)
+- Danach jährlich (für die ersten 2 Jahre nach Zulassung)
+- Danach alle 3 Jahre
+
+**Zentrales Verfahren (EMA/CP):**
+- PSUR Single Assessment (PSUSA) über PSUSA-Portal der EMA
+- Gleichzeitige Einreichung bei EMA und NCAs
+
+**PSUR-Inhalte zwingend:**
+- Übersicht aller ICSRs im Berichtszeitraum
+- Signaldetektion-Analyse
+- Aktualisierter Risk-Benefit-Status
+- Risk Management Plan (RMP) Update
+- Aktuelle SmPC/Fachinformation
+
+**Schweiz (Swissmedic):**
+- Innerhalb 4 Jahre nach Erstzulassung für neue Wirkstoffe
+- Eigener Swissmedic-Einreichungsprozess (nicht über EudraVigilance)
+- Fristen können von EU-Fristen abweichen
+
+⚠️ Nicht-Einhaltung kann zur MA-Aussetzung führen!
+
+Kontakt QPPV: Dr. Lena Hofmann (l.hofmann@regcomply.de)`,
+
+ compare_adv: `**Pharmawerbung DE vs. AT vs. CH — Vergleich:**
+
+|Aspekt|🇩🇪 Deutschland|🇦🇹 Österreich|🇨🇭 Schweiz|
+|---|---|---|---|
+|Rechtsgrundlage|HWG + UWG|AWEG + UWG-AT|OMPA/AWV + TPA Art.32|
+|Rx an Laien|Verboten §10 HWG|Verboten|Verboten|
+|OTC Laienw.|Erlaubt + §11 Verbote|Erlaubt + Verbote|Erlaubt, Kat. C/D: Swissmedic-Hinweis|
+|HCP-Werbung|Erlaubt + §4 Pflichtang.|Erlaubt + §51 AWEG|Erlaubt, nur zugelassene Indikationen|
+|Zuwendungen|Max. €1 Werbemittel|§54 AWEG-Schwellenwert|TPITO-Verbot! Ausn.: Wissenschaft|
+|Digital/Social|HWG gilt voll|AWEG gilt voll|Passwortschutz für HCP-Portale|
+|Vorabgenehmigung|Nein (außer spez. Produkte)|Nein|Nur für Analgetika/Sedativa mit Missbrauchspotenzial|
+|Selbstregulierung|FSA-Kodex (VFA-Mitglieder)|Pharmig-Verhaltenskodex|scienceindustries-Kodex|
+
+**Gemeinsam in allen 3 Ländern:**
+- Rx-Werbung an die Allgemeinheit: verboten
+- Werbung muss wahrheitsgemäß und wissenschaftlich belegt sein
+- Off-label Werbung ist grundsätzlich verboten
+- Unzulässige Heilsversprechen verboten`,
+};
+
+function getAIResponse(q) {
+ const lq = q.toLowerCase();
+ if (lq.includes('mah') || lq.includes('marketing auth') || lq.includes('zulassungsinhaber') || lq.includes('übernahme') || lq.includes('transfer')) return aiKB.mah;
+ if (lq.includes('amnog') || lq.includes('frühe nutzenbewertung') || lq.includes('g-ba') || lq.includes('iqwig')) return aiKB.amnog;
+ if (lq.includes('qppv') || lq.includes('stufenplan') || lq.includes('gpo') || lq.includes('pharmacovigilanz') && (lq.includes('unterschied') || lq.includes('vs'))) return aiKB.qppv;
+ if (lq.includes('swissmedic') || lq.includes('schweiz') || lq.includes('tpa') || lq.includes('hmg')) return aiKB.swissmedic;
+ if (lq.includes('hwg') || lq.includes('heilmittelwerbege') || lq.includes('pharmawerbung') || (lq.includes('werbung') && lq.includes('deutschland'))) return aiKB.hwg;
+ if (lq.includes('exploitant') || lq.includes('frankreich') || lq.includes('ansm') || lq.includes('has') && lq.includes('fr')) return aiKB.exploitant;
+ if (lq.includes('psur') || lq.includes('periodic safety') || lq.includes('psmf') || lq.includes('eudravigilance') || (lq.includes('frist') && lq.includes('mah'))) return aiKB.psur;
+ if (lq.includes('vergleich') && (lq.includes('werbung') || lq.includes('hwg') || lq.includes('ompa'))) return aiKB.compare_adv;
+ if (lq.includes('qppv') || lq.includes('pharmacovigilanz') || lq.includes('pv') && lq.includes('system')) return aiKB.qppv;
+ if (lq.includes('erster schritt') || lq.includes('erstschritte') || lq.includes('beginnen') || lq.includes('anfangen')) {
+   return `**Erste Schritte bei MAH-Transfer / Pharma-Rollout:**
+
+1. **Zulassungsstrategie festlegen:**\n   - Welche Produkte? Rx oder OTC?\n   - Zentrales Verfahren (EMA/CP) oder Dezentralisiert (DCP/MRP)?\n   - Schweiz: Separater Swissmedic-Antrag!
+
+2. **Lokale Entitäten gründen:**\n   - Deutschland/Österreich/Frankreich/NL: EU-Gesellschaft möglich\n   - **Frankreich:** Exploitant-Entität und RP benennen\n   - **Schweiz:** Lokale Gesellschaft PFLICHT für Swissmedic-Antrag
+
+3. **Pharmacovigilanz aufbauen:**\n   - EU QPPV benennen (EEA-ansässig, 24/7)\n   - PSMF erstellen\n   - EudraVigilance-Registrierung\n   - Nationale: GPO (DE), LPPV (AT/FR), RP (CH)
+
+4. **Variation-Antrag einreichen** (MAH-Transfer-Antrag)
+
+5. **Preiserstattungsstrategie:**\n   - AMNOG-Dossier (DE) vorbereiten\n   - HAS-SMR-Bewertung einplanen (FR)\n   - SL-Antrag (CH)\n   - EKO-Einreichung (AT)
+
+6. **Compliance-Setup Werbung:**\n   - Länderspezifische Werbematerialien nach HWG/AWEG/OMPA/CSP
+
+Ansprechpartner: Klaus Schneider (k.schneider@regcomply.eu)`;
+ }
+ return `Zu dieser Frage sind folgende pharmazeutische Regulierungsthemen relevant:\n\n• **MAH-Pflichten & Transfer** — Fragen Sie nach "MAH" oder "Zulassungsübernahme"\n• **AMNOG** — Deutsches Preisrecht und Nutzenbewertungsverfahren\n• **QPPV vs. GPO** — Pharmacovigilanz-Verantwortliche\n• **Swissmedic** — Schweizer Zulassungsanforderungen\n• **HWG** — Deutsche Pharmawerberegelungen\n• **Exploitant / ANSM** — Frankreich-spezifische Anforderungen\n• **PSUR-Fristen** — Periodische Sicherheitsberichte\n• **Werbevergleich DE/AT/CH** — Länderspezifische Unterschiede\n\nBitte konkretisieren Sie Ihre Frage für eine präzisere Antwort.`;
+}
+
+// =================== RENDER ===================
+function renderCC(c) {
+ const cls = c.status === 'active' ? 's-active' : c.status === 'review' ? 's-review' : 's-planned';
+ const dotCls = c.status === 'active' ? 'dot-green' : c.status === 'review' ? 'dot-amber' : 'dot-grey';
+ const statusText = c.status === 'active' ? 'Aktiv' : c.status === 'review' ? 'In Prüfung' : 'Geplant';
+ return `<div class="cc ${cls}" onclick="openDetail('${c.id}')">
+   <div class="cc-top">
+     <div>
+       <div class="cc-flag">${c.flag}</div>
+       <div class="cc-name">${c.name}</div>
+       <div class="cc-sub">${c.entity}</div>
+     </div>
+     <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end;">
+       ${c.pills.map(p=>`<span class="pill ${p[1]}" style="font-size:9px;">${p[0]}</span>`).join('')}
+     </div>
+   </div>
+   <div class="cc-tags">${c.tags.map(t=>`<span class="tag tag-teal">${t}</span>`).join('')}</div>
+   <div class="cc-foot">
+     <span style="display:flex;align-items:center;gap:5px;"><span class="dot ${dotCls}"></span>${statusText}</span>
+     <span>${c.laws.length} Regelwerke</span>
+   </div>
+ </div>`;
+}
+
+function renderContact(c) {
+ return `<div class="contact-card">
+   <div class="c-card-av">${c.icon}</div>
+   <div class="c-card-name">${c.name}</div>
+   <div class="c-card-role">${c.role}</div>
+   <div class="c-card-org">${c.country||''} ${c.org}</div>
+   <div class="c-card-fields">
+     ${c.email?`<div class="c-field">✉ <a href="mailto:${c.email}">${c.email}</a></div>`:''}
+     ${c.phone?`<div class="c-field">☎ <span>${c.phone}</span></div>`:''}
+   </div>
+ </div>`;
+}
+
+function renderPricing() {
+ return countries.filter(c=>c.pricing).map(c=>`
+   <div class="card">
+     <div class="card-hd">
+       <span class="card-title">${c.flag} ${c.name} — ${c.pricing.system}</span>
+       <span class="pill ${c.status==='active'?'pill-green':c.status==='review'?'pill-amber':'pill-red'}">${c.status==='active'?'Aktiv':c.status==='review'?'In Prüfung':'Geplant'}</span>
+     </div>
+     <div class="card-bd" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;">
+       <div><div style="font-size:9.5px;color:var(--gold);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:3px;">Zuständige Behörde</div><div style="font-size:12px;">${c.pricing.authority}</div></div>
+       <div><div style="font-size:9.5px;color:var(--gold);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:3px;">HTA-Verfahren</div><div style="font-size:12px;">${c.pricing.hta}</div></div>
+       <div><div style="font-size:9.5px;color:var(--gold);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:3px;">Zeitlinie</div><div style="font-size:12px;">${c.pricing.timeline}</div></div>
+       <div><div style="font-size:9.5px;color:var(--gold);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:3px;">Hinweise</div><div style="font-size:12px;color:var(--text-muted);">${c.pricing.notes}</div></div>
+     </div>
+   </div>`).join('');
+}
+
+function renderAdvertising() {
+ return countries.filter(c=>c.advertising).map(c=>`
+   <div class="card">
+     <div class="card-hd">
+       <span class="card-title">${c.flag} ${c.name} — Werberegelungen</span>
+       <span class="tag tag-gold" style="font-size:10px;">${c.advertising.law}</span>
+     </div>
+     <div class="card-bd" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
+       <div><div style="font-size:9px;color:var(--red);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:3px;">Rx-Werbung Laien</div><div style="font-size:12px;color:#e06060;">${c.advertising.rx}</div></div>
+       <div><div style="font-size:9px;color:var(--green-light);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:3px;">OTC-Werbung</div><div style="font-size:12px;">${c.advertising.otc}</div></div>
+       <div><div style="font-size:9px;color:var(--teal-light);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:3px;">HCP-Fachkreiswerbung</div><div style="font-size:12px;">${c.advertising.hcp}</div></div>
+       <div><div style="font-size:9px;color:var(--gold);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:3px;">Zuwendungen</div><div style="font-size:12px;color:var(--text-muted);">${c.advertising.gifts}</div></div>
+       <div style="grid-column:span 2;"><div style="font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:3px;">Digital & Social Media</div><div style="font-size:12px;color:var(--text-muted);">${c.advertising.digital}</div></div>
+     </div>
+   </div>`).join('');
+}
+
+function renderUpdates() {
+ const cls = {critical:'pill-red',high:'pill-red',medium:'pill-amber'};
+ const lbl = {critical:'🔴 Kritisch',high:'🟠 Hoch',medium:'🟡 Mittel'};
+ return updates.map(u=>`
+   <div class="update-card">
+     <div class="update-head">
+       <div>
+         <div class="update-meta">${u.date} · ${u.scope}</div>
+         <div class="update-title">${u.title}</div>
+       </div>
+       <span class="pill ${cls[u.sev]}" style="white-space:nowrap;">${lbl[u.sev]}</span>
+     </div>
+     <div class="update-body">
+       <div class="update-desc">${u.desc}</div>
+       <span class="tag tag-teal">→ ${u.action}</span>
+     </div>
+   </div>`).join('');
+}
+
+// =================== DETAIL PANEL ===================
+function openDetail(id) {
+ const c = countries.find(x=>x.id===id);
+ if(!c) return;
+ document.getElementById('dp-flag').textContent = c.flag;
+ document.getElementById('dp-name').textContent = c.name;
+ document.getElementById('dp-entity').textContent = c.entity;
+ document.getElementById('dp-pills').innerHTML = c.pills.map(p=>`<span class="pill ${p[1]}">${p[0]}</span>`).join('');
+ document.getElementById('dp-body').innerHTML = `
+   <div class="dp-section">
+     <div class="dp-section-title">Rechtliche Grundlagen</div>
+     ${c.laws.map(l=>`<div class="law-item">
+       <div class="law-cat">${l.cat}</div>
+       <div class="law-name">${l.name}</div>
+       <div class="law-desc">${l.desc}</div>
+       <a class="law-link" href="${l.link}" target="_blank">🔗 Zum Gesetzestext / Behörde</a>
+     </div>`).join('')}
+   </div>
+   <div class="dp-section">
+     <div class="dp-section-title">Preisrecht & HTA</div>
+     <div class="law-item">
+       <div class="law-cat">System</div>
+       <div class="law-name">${c.pricing.system}</div>
+       <div class="law-desc"><strong>Behörde:</strong> ${c.pricing.authority}<br><strong>HTA:</strong> ${c.pricing.hta}<br><strong>Zeitlinie:</strong> ${c.pricing.timeline}<br><strong>Hinweis:</strong> ${c.pricing.notes}</div>
+     </div>
+   </div>
+   <div class="dp-section">
+     <div class="dp-section-title">Werberegelungen</div>
+     <div class="law-item">
+       <div class="law-cat">Rechtsgrundlage: ${c.advertising.law}</div>
+       <div class="law-desc">
+         <strong>Rx-Werbung Laien:</strong> <span style="color:#e06060;">${c.advertising.rx}</span><br>
+         <strong>OTC-Werbung:</strong> ${c.advertising.otc}<br>
+         <strong>HCP-Fachkreis:</strong> ${c.advertising.hcp}<br>
+         <strong>Zuwendungen:</strong> ${c.advertising.gifts}<br>
+         <strong>Digital/Social:</strong> ${c.advertising.digital}
+       </div>
+     </div>
+   </div>
+   <div class="dp-section">
+     <div class="dp-section-title">Behörden & Kontakte</div>
+     ${c.contacts.map(ct=>`<div class="contact-row">
+       <div class="c-av">${ct.icon}</div>
+       <div>
+         <div class="c-name">${ct.name}</div>
+         <div class="c-role">${ct.role}</div>
+         <div class="c-info">${ct.org}${ct.email?' · ✉ '+ct.email:''}${ct.phone?' · ☎ '+ct.phone:''}</div>
+       </div>
+     </div>`).join('')}
+   </div>
+   <div style="margin-top:14px;">
+     <button class="btn btn-gold" onclick="quickSend('Was muss ich für ${c.name} bei der Pharma-Vermarktung beachten?');nav('agent');">🤖 AI-Agent zu ${c.name} befragen</button>
+   </div>
+ `;
+ document.getElementById('overlay').classList.add('open');
+ document.getElementById('detailPanel').classList.add('open');
+}
+
+function closeDetail() {
+ document.getElementById('overlay').classList.remove('open');
+ document.getElementById('detailPanel').classList.remove('open');
+}
+
+// =================== NAVIGATION ===================
+// =================== DOCUMENTS ===================
+const DOC_ICONS = { pdf:'📄', docx:'📝', doc:'📝', xlsx:'📊', xls:'📊', pptx:'📋', ppt:'📋', txt:'📃', csv:'📊', default:'📎' };
+const DOC_ICON_CLASS = { pdf:'doc-icon-pdf', docx:'doc-icon-docx', doc:'doc-icon-docx', xlsx:'doc-icon-xlsx', xls:'doc-icon-xlsx', pptx:'doc-icon-pptx', ppt:'doc-icon-pptx' };
+
+let documents = [
+ { id:1, name:'PSMF_RegComply_v3.2_2024.pdf', cat:'pv', country:'EU-weit', size:'2.4 MB', date:'14 Feb 2025', ext:'pdf', uploader:'Dr. L. Hofmann', expiry:null, desc:'Pharmacovigilance System Master File — aktuelle Version' },
+ { id:2, name:'AMNOG_Nutzendossier_Produkt-A_DE.pdf', cat:'regulatory', country:'Deutschland', size:'8.1 MB', date:'10 Feb 2025', ext:'pdf', uploader:'Dr. S. Müller', expiry:'30 Jun 2025', desc:'Nutzendossier für G-BA-Einreichung Produkt A' },
+ { id:3, name:'Swissmedic_Zulassungsantrag_CH_Draft.docx', cat:'regulatory', country:'Schweiz', size:'1.8 MB', date:'5 Feb 2025', ext:'docx', uploader:'Dr. A. Steiner', expiry:null, desc:'Entwurf Swissmedic-Antrag — zur internen Prüfung' },
+ { id:4, name:'HWG_Compliance_Checkliste_DE_AT.xlsx', cat:'regulatory', country:'Deutschland / Österreich', size:'340 KB', date:'1 Feb 2025', ext:'xlsx', uploader:'K. Schneider', expiry:null, desc:'Checkliste HWG/AWEG-Konformität für Werbematerialien' },
+ { id:5, name:'QPPV_Appointment_Letter_EU.pdf', cat:'pv', country:'EU-weit', size:'180 KB', date:'15 Jan 2025', ext:'pdf', uploader:'Dr. S. Müller', expiry:'31 Dec 2025', desc:'Formelle QPPV-Bestellung Dr. Lena Hofmann' },
+ { id:6, name:'Internal_Audit_Report_PV_Q4_2024.pdf', cat:'audit', country:'EU-weit', size:'1.2 MB', date:'20 Jan 2025', ext:'pdf', uploader:'Dr. M. Keller', expiry:null, desc:'Interner Audit-Bericht Pharmacovigilanz-System Q4 2024' },
+ { id:7, name:'MAH_Transfer_Agreement_DE_AT.pdf', cat:'contract', country:'Deutschland / Österreich', size:'560 KB', date:'12 Jan 2025', ext:'pdf', uploader:'K. Schneider', expiry:'31 Dec 2026', desc:'MAH-Übernahmevertrag DE und AT — unterzeichnet' },
+ { id:8, name:'PSUR_Produkt-A_2024_H2.pdf', cat:'pv', country:'EU-weit', size:'3.2 MB', date:'5 Jan 2025', ext:'pdf', uploader:'Dr. L. Hofmann', expiry:'30 Jun 2025', desc:'Periodic Safety Update Report Produkt A — 2. Halbjahr 2024' },
+ { id:9, name:'ANSM_Exploitant_Dossier_FR_Draft.docx', cat:'regulatory', country:'Frankreich', size:'920 KB', date:'3 Jan 2025', ext:'docx', uploader:'J.-P. Dubois', expiry:null, desc:'Exploitant-Zulassungsantrag ANSM — Entwurf' },
+ { id:10, name:'GDP_SOP_v2.1_Logistics.pdf', cat:'contract', country:'EU-weit', size:'440 KB', date:'20 Dec 2024', ext:'pdf', uploader:'K. Schneider', expiry:null, desc:'SOP Gute Distributionspraxis (GDP) — Version 2.1' },
+ { id:11, name:'BfArM_Inspection_Response_2024.pdf', cat:'audit', country:'Deutschland', size:'780 KB', date:'15 Dec 2024', ext:'pdf', uploader:'Dr. S. Müller', expiry:null, desc:'Antwort auf BfArM-Inspektion November 2024' },
+ { id:12, name:'Regulatory_Overview_Dashboard.pptx', cat:'other', country:'EU-weit', size:'5.6 MB', date:'10 Dec 2024', ext:'pptx', uploader:'Dr. M. Keller', expiry:null, desc:'Management-Präsentation Regulatory Overview' },
+];
+
+let docFilter = 'all';
+let docSearch = '';
+let docSortMode = 'date-desc';
+
+function getDocIcon(ext) { return DOC_ICONS[ext] || DOC_ICONS.default; }
+function getDocIconClass(ext) { return DOC_ICON_CLASS[ext] || 'doc-icon-other'; }
+function getDocCatClass(cat) { return `cat-${cat}`; }
+
+function getFilteredDocs() {
+ let list = [...documents];
+ if (docFilter !== 'all') list = list.filter(d => d.cat === docFilter);
+ if (docSearch) list = list.filter(d => d.name.toLowerCase().includes(docSearch) || d.desc.toLowerCase().includes(docSearch) || d.country.toLowerCase().includes(docSearch));
+ list.sort((a, b) => {
+   if (docSortMode === 'date-desc') return b.id - a.id;
+   if (docSortMode === 'date-asc') return a.id - b.id;
+   if (docSortMode === 'name-asc') return a.name.localeCompare(b.name);
+   if (docSortMode === 'name-desc') return b.name.localeCompare(a.name);
+   if (docSortMode === 'size-desc') return parseFloat(b.size) - parseFloat(a.size);
+   return 0;
+ });
+ return list;
+}
+
+function renderDocGrid() {
+ const list = getFilteredDocs();
+ const grid = document.getElementById('docGrid');
+ if (!list.length) { grid.innerHTML = `<div style="padding:40px;text-align:center;color:var(--text-muted);">Keine Dokumente gefunden.</div>`; return; }
+ grid.innerHTML = list.map(d => {
+   const expiryHtml = d.expiry ? `<span style="color:${isExpiringSoon(d.expiry)?'#e8a840':'var(--text-muted)'}">⏱ Ablauf: ${d.expiry}</span>` : '';
+   return `<div class="doc-item ${getDocCatClass(d.cat)}" onclick="previewDoc(${d.id})">
+     <div class="doc-icon-wrap ${getDocIconClass(d.ext)}">${getDocIcon(d.ext)}</div>
+     <div class="doc-info">
+       <div class="doc-name">${d.name}</div>
+       <div class="doc-meta">
+         <span>🌍 ${d.country}</span>
+         <span>📅 ${d.date}</span>
+         <span>💾 ${d.size}</span>
+         <span style="color:var(--text-muted);">👤 ${d.uploader}</span>
+         ${expiryHtml}
+       </div>
+     </div>
+     <div class="doc-actions">
+       <button class="doc-action-btn" title="Vorschau" onclick="event.stopPropagation();previewDoc(${d.id})">👁</button>
+       <button class="doc-action-btn" title="Herunterladen" onclick="event.stopPropagation();fakeDownload('${d.name}')">⬇</button>
+       <button class="doc-action-btn" title="Löschen" onclick="event.stopPropagation();deleteDoc(${d.id})" style="color:#e06060;">🗑</button>
+     </div>
+   </div>`;
+ }).join('');
+ updateDocStats();
+}
+
+function isExpiringSoon(expiry) {
+ if (!expiry) return false;
+ const parts = expiry.split(' ');
+ const months = {Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
+ try { const d = new Date(parseInt(parts[2]), months[parts[1]]||0, 1); return (d - new Date()) < 60*24*3600*1000; } catch(e) { return false; }
+}
+
+function updateDocStats() {
+ document.getElementById('statTotal').textContent = documents.length;
+ document.getElementById('docCountBadge').textContent = documents.length;
+ const counts = { regulatory:0, pv:0, audit:0, contract:0, other:0 };
+ documents.forEach(d => { if(counts[d.cat]!==undefined) counts[d.cat]++; });
+ document.getElementById('fAll').textContent = documents.length;
+ document.getElementById('fReg').textContent = counts.regulatory;
+ document.getElementById('fPV').textContent = counts.pv;
+ document.getElementById('fAudit').textContent = counts.audit;
+ document.getElementById('fContract').textContent = counts.contract;
+ document.getElementById('fOther').textContent = counts.other;
+}
+
+function filterDocs(cat, el) {
+ docFilter = cat;
+ document.querySelectorAll('.doc-filter-item').forEach(e => e.classList.remove('active'));
+ el.classList.add('active');
+ renderDocGrid();
+}
+
+function searchDocs(val) { docSearch = val.toLowerCase(); renderDocGrid(); }
+function sortDocs(val) { docSortMode = val; renderDocGrid(); }
+
+function handleFileSelect(files) {
+ if (!files || !files.length) return;
+ Array.from(files).forEach((file, i) => {
+   setTimeout(() => simulateUpload(file), i * 400);
+ });
+}
+
+function simulateUpload(file) {
+ const id = 'prog_' + Date.now() + '_' + Math.random().toString(36).substr(2,5);
+ const container = document.getElementById('uploadProgress');
+ const el = document.createElement('div');
+ el.className = 'progress-item'; el.id = id;
+ el.innerHTML = `
+   <div class="progress-name">⬆ ${file.name}</div>
+   <div class="progress-bar-wrap"><div class="progress-bar-fill" id="bar_${id}" style="width:0%"></div></div>
+   <div class="progress-meta"><span>Wird hochgeladen…</span><span id="pct_${id}">0%</span></div>`;
+ container.appendChild(el);
+ let pct = 0;
+ const interval = setInterval(() => {
+   pct += Math.random() * 18 + 5;
+   if (pct >= 100) { pct = 100; clearInterval(interval);
+     document.getElementById(`bar_${id}`).style.width = '100%';
+     document.getElementById(`pct_${id}`).textContent = '100%';
+     el.querySelector('.progress-meta span').textContent = '✓ Fertig';
+     el.style.borderColor = 'rgba(42,139,90,0.4)';
+     // Add to documents array
+     const ext = file.name.split('.').pop().toLowerCase();
+     const sizeKB = (file.size/1024);
+     const sizeStr = sizeKB > 1024 ? `${(sizeKB/1024).toFixed(1)} MB` : `${Math.round(sizeKB)} KB`;
+     const newDoc = { id: documents.length+1, name: file.name, cat:'other', country:'Nicht zugewiesen', size: sizeStr, date:'Heute', ext, uploader:'Dr. M. Keller', expiry:null, desc:'Neu hochgeladen — Kategorie bitte zuweisen.' };
+     documents.unshift(newDoc);
+     renderDocGrid();
+     setTimeout(() => { el.style.opacity='0'; el.style.transition='opacity 0.5s'; setTimeout(()=>el.remove(), 500); }, 2200);
+   } else {
+     document.getElementById(`bar_${id}`).style.width = pct + '%';
+     document.getElementById(`pct_${id}`).textContent = Math.round(pct) + '%';
+   }
+ }, 120);
+}
+
+function previewDoc(id) {
+ const d = documents.find(x => x.id === id);
+ if (!d) return;
+ document.getElementById('auditDetailContent').innerHTML = `
+   <div class="modal-head">
+     <div>
+       <div style="font-size:11px;color:var(--gold);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:4px;">${d.ext.toUpperCase()} · ${d.cat}</div>
+       <div style="font-family:'Cormorant Garamond',serif;font-size:19px;font-weight:700;color:var(--text);">${d.name}</div>
+     </div>
+     <button class="modal-close" onclick="document.getElementById('auditDetailModal').classList.remove('open')">✕</button>
+   </div>
+   <div class="modal-body">
+     <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px;">
+       <div class="doc-stat"><div class="doc-stat-lbl">Hochgeladen</div><div style="font-size:13px;color:var(--text);margin-top:4px;">${d.date}</div></div>
+       <div class="doc-stat"><div class="doc-stat-lbl">Größe</div><div style="font-size:13px;color:var(--text);margin-top:4px;">${d.size}</div></div>
+       <div class="doc-stat"><div class="doc-stat-lbl">Von</div><div style="font-size:13px;color:var(--text);margin-top:4px;">${d.uploader}</div></div>
+       <div class="doc-stat"><div class="doc-stat-lbl">Land / Scope</div><div style="font-size:13px;color:var(--text);margin-top:4px;">${d.country}</div></div>
+     </div>
+     <div class="form-group">
+       <label class="form-label">Beschreibung</label>
+       <div style="background:var(--surface3);border-radius:8px;padding:12px;font-size:12.5px;color:var(--text-muted);">${d.desc}</div>
+     </div>
+     ${d.expiry ? `<div class="warning-box" style="margin-top:8px;"><strong>⏱ Ablaufdatum:</strong> ${d.expiry} — bitte rechtzeitig erneuern.</div>` : ''}
+     <div style="display:flex;gap:8px;margin-top:16px;">
+       <button class="btn btn-gold" onclick="fakeDownload('${d.name}');document.getElementById('auditDetailModal').classList.remove('open')">⬇ Herunterladen</button>
+       <button class="btn btn-ghost" onclick="document.getElementById('auditDetailModal').classList.remove('open')">Schließen</button>
+     </div>
+   </div>`;
+ document.getElementById('auditDetailModal').classList.add('open');
+}
+
+function deleteDoc(id) {
+ if (!confirm('Dokument wirklich löschen?')) return;
+ documents = documents.filter(d => d.id !== id);
+ renderDocGrid();
+}
+
+function fakeDownload(name) {
+ // Create a tiny invisible link and click it for UX simulation
+ const a = document.createElement('a');
+ a.href = 'data:text/plain;charset=utf-8,' + encodeURIComponent('PharmaComply Platform — ' + name);
+ a.download = name;
+ document.body.appendChild(a); a.click(); document.body.removeChild(a);
+}
+
+// Drag and drop
+document.addEventListener('DOMContentLoaded', () => {
+ const zone = document.getElementById('uploadZone');
+ if (!zone) return;
+ ['dragenter','dragover'].forEach(e => zone.addEventListener(e, ev => { ev.preventDefault(); zone.classList.add('drag-over'); }));
+ ['dragleave','drop'].forEach(e => zone.addEventListener(e, ev => { ev.preventDefault(); zone.classList.remove('drag-over'); }));
+ zone.addEventListener('drop', ev => { if(ev.dataTransfer.files.length) handleFileSelect(ev.dataTransfer.files); });
+});
+
+// =================== AUDITS ===================
+let audits = [
+ {
+   id: 1, type: 'internal', status: 'completed',
+   title: 'Pharmacovigilanz-System Interne Prüfung Q4 2024',
+   area: 'Pharmacovigilanz-System (QPPV/PSMF)',
+   country: '🇪🇺 EU-weit', date: '12 Jan 2025', auditor: 'Dr. Maria Keller',
+   score: 91, scoreClass: 'score-excellent',
+   summary: 'Das PV-System erfüllt die Anforderungen der GVP-Module. PSMF ist aktuell. Kleine Lücken bei der CAPA-Dokumentation wurden identifiziert.',
+   findings: [
+     { sev:'minor', text:'CAPA-Tracking-System nicht vollständig implementiert — manuelle Excel-Liste nicht ausreichend', icon:'🟡' },
+     { sev:'minor', text:'2 Schulungsnachweise für PV-Personal fehlen (Mitarbeiter FR-Niederlassung)', icon:'🟡' },
+     { sev:'obs', text:'Verbesserungspotenzial: PSUR-Kalender zentral pflegen', icon:'🔵' },
+   ],
+   capas: [
+     { title:'CAPA-Software implementieren (z.B. TrackWise oder Vault)', status:'wip', due:'31 Mar 2025', owner:'K. Schneider' },
+     { title:'Schulungsmatrix FR-Mitarbeiter vervollständigen', status:'done', due:'28 Feb 2025', owner:'Dr. L. Hofmann' },
+     { title:'Zentraler PSUR-Kalender in Confluence erstellen', status:'open', due:'15 Apr 2025', owner:'Dr. L. Hofmann' },
+   ],
+   followup: '30 Apr 2025'
+ },
+ {
+   id: 2, type: 'authority', status: 'completed',
+   title: 'BfArM Routine-Inspektion — Stufenplanbeauftragter DE',
+   area: 'MAH-Pflichten & Zulassungsmanagement',
+   country: '🇩🇪 Deutschland', date: '18 Nov 2024', auditor: 'BfArM (extern)',
+   score: 84, scoreClass: 'score-good',
+   summary: 'BfArM-Inspektion des GPO-Systems. Insgesamt positives Ergebnis. Zwei Major-Befunde bezüglich Dokumentation von Qualitätsmängeln erfordern Nachbesserung.',
+   findings: [
+     { sev:'major', text:'Fehlende Dokumentation von 3 Qualitätsmängeln im Q3 2024 (Rückverfolgbarkeit nicht gegeben)', icon:'🟠' },
+     { sev:'major', text:'GPO-Handlungsanweisungen nicht in aktueller Fassung vorhanden', icon:'🟠' },
+     { sev:'minor', text:'Einige Rückrufberichte ohne Zeitstempel im System erfasst', icon:'🟡' },
+     { sev:'obs', text:'IT-System-Upgrade empfohlen für lückenlose Rückverfolgbarkeit', icon:'🔵' },
+   ],
+   capas: [
+     { title:'Qualitätsmängel Q3 2024 nachträglich dokumentieren und BfArM melden', status:'done', due:'10 Dec 2024', owner:'Dr. S. Müller' },
+     { title:'GPO-Handlungsanweisung auf Version 4.0 aktualisieren', status:'done', due:'15 Dec 2024', owner:'Dr. S. Müller' },
+     { title:'IT-System Upgrade beantragen und evaluieren', status:'wip', due:'30 Jun 2025', owner:'K. Schneider' },
+   ],
+   followup: '18 May 2025'
+ },
+ {
+   id: 3, type: 'external', status: 'completed',
+   title: 'CMO-Audit Lohnhersteller Frankfurt',
+   area: 'Supplier / CMO-Audit',
+   country: '🇩🇪 Deutschland', date: '5 Oct 2024', auditor: 'Dr. Sarah Müller',
+   score: 78, scoreClass: 'score-fair',
+   summary: 'Audit beim Contract Manufacturing Organization (CMO) in Frankfurt. GDP-Konformität teilweise nicht nachgewiesen. Reinräume und Dokumentationssystem zeigen Mängel.',
+   findings: [
+     { sev:'critical', text:'Temperatur-Monitoring Kühlraum: 3 ungeklärte Ausreißer ohne Deviation-Report', icon:'🔴' },
+     { sev:'major', text:'Change Control Procedure nicht nach aktuellem GMP-Standard', icon:'🟠' },
+     { sev:'major', text:'Kalibrierungsnachweise für 4 Messgeräte abgelaufen', icon:'🟠' },
+     { sev:'minor', text:'Personalschulung Reinraumverhalten: 5 Mitarbeiter nicht aktuell geschult', icon:'🟡' },
+   ],
+   capas: [
+     { title:'Deviation-Reports für Temperatur-Ausreißer erstellen, Risikobewertung', status:'done', due:'20 Oct 2024', owner:'CMO QM-Team' },
+     { title:'Change Control SOP auf GMP-Anforderungen aktualisieren', status:'done', due:'30 Nov 2024', owner:'CMO QM-Team' },
+     { title:'Kalibrierung aller überfälligen Messgeräte', status:'done', due:'15 Nov 2024', owner:'CMO QM-Team' },
+     { title:'Reinraumschulung ausstehende Mitarbeiter', status:'done', due:'31 Oct 2024', owner:'CMO HR' },
+   ],
+   followup: '5 Apr 2025'
+ },
+ {
+   id: 4, type: 'internal', status: 'completed',
+   title: 'Werbemittel-Compliance Audit DE/AT',
+   area: 'Werbemittel-Compliance (HWG/OMPA)',
+   country: '🇩🇪🇦🇹 DE/AT', date: '15 Aug 2024', auditor: 'K. Schneider',
+   score: 95, scoreClass: 'score-excellent',
+   summary: 'Vollständige Prüfung aller aktiven Werbematerialien für DE und AT. Sehr gutes Ergebnis — HWG/AWEG-Konformität bestätigt. Kleinere Anpassungen bei Pflichtangaben empfohlen.',
+   findings: [
+     { sev:'minor', text:'2 Broschüren: Fachinformations-Datum nicht auf aktuellem Stand', icon:'🟡' },
+     { sev:'obs', text:'Digital-Werbung: Hinweis auf Pflichtangaben in Fußnote statt im Haupttext', icon:'🔵' },
+   ],
+   capas: [
+     { title:'Broschüren mit aktuellem SmPC-Datum aktualisieren', status:'done', due:'30 Aug 2024', owner:'Medical Affairs' },
+     { title:'Digital-Richtlinie für Pflichtangaben-Platzierung erstellen', status:'open', due:'30 Apr 2025', owner:'K. Schneider' },
+   ],
+   followup: '15 Feb 2025'
+ },
+ {
+   id: 5, type: 'mock', status: 'completed',
+   title: 'Mock Inspection — Swissmedic Vorbereitung CH',
+   area: 'MAH-Pflichten & Zulassungsmanagement',
+   country: '🇨🇭 Schweiz', date: '20 Jun 2024', auditor: 'Dr. Anna Steiner (extern)',
+   score: 72, scoreClass: 'score-fair',
+   summary: 'Simulierte Swissmedic-Inspektion zur Vorbereitung der CH-Markteinführung. Wesentliche Lücken bei lokaler PV-Struktur (RP noch nicht benannt) und HMG-spezifischer Dokumentation.',
+   findings: [
+     { sev:'critical', text:'Responsible Person (RP) für Schweizer Markt noch nicht formal benannt — Pflicht nach HMG', icon:'🔴' },
+     { sev:'major', text:'Swissmedic-spezifisches PV-System nicht eingerichtet (EudraVigilance nicht ausreichend)', icon:'🟠' },
+     { sev:'major', text:'Produktkennzeichnung: Kantonale Anforderungen noch nicht geprüft', icon:'🟠' },
+     { sev:'minor', text:'Übersetzung Produktinformationen ins Französische ausstehend', icon:'🟡' },
+   ],
+   capas: [
+     { title:'RP für CH formal benennen und bei Swissmedic melden', status:'wip', due:'30 Apr 2025', owner:'Dr. A. Steiner' },
+     { title:'Swissmedic PV-System aufbauen und testen', status:'wip', due:'30 Jun 2025', owner:'Dr. L. Hofmann' },
+     { title:'Kantonale Kennzeichnungsanforderungen prüfen', status:'open', due:'31 May 2025', owner:'Dr. A. Steiner' },
+     { title:'Produktinformationen ins Französische übersetzen', status:'open', due:'31 May 2025', owner:'Dr. A. Steiner' },
+   ],
+   followup: '30 Jun 2025'
+ },
+ {
+   id: 6, type: 'internal', status: 'planned',
+   title: 'QPPV-System Audit Q1 2025 (geplant)',
+   area: 'Pharmacovigilanz-System (QPPV/PSMF)',
+   country: '🇪🇺 EU-weit', date: '15 Apr 2025', auditor: 'Noch nicht zugewiesen',
+   score: null, scoreClass: '',
+   summary: 'Geplanter interner Audit des QPPV-Systems inkl. EudraVigilance-Einträge, PSMF-Update und CAPA-Tracking.',
+   findings: [],
+   capas: [],
+   followup: null
+ },
+];
+
+let auditTypeFilter = 'all';
+let auditStatusFilter = 'all';
+let auditSearch = '';
+let selectedScore = null;
+
+const AUDIT_ICONS = { internal:'🏢', external:'🌐', authority:'🏛', mock:'🟢' };
+const AUDIT_ICON_CLASS = { internal:'audit-icon-internal', external:'audit-icon-external', authority:'audit-icon-authority', mock:'audit-icon-mock' };
+const AUDIT_STATUS_LABELS = { completed:'✓ Abgeschlossen', 'in-progress':'◑ In Bearbeitung', planned:'○ Geplant' };
+const AUDIT_STATUS_PILL = { completed:'pill-green', 'in-progress':'pill-amber', planned:'pill-red' };
+const SEV_CLASS = { critical:'sev-critical', major:'sev-major', minor:'sev-minor', obs:'sev-obs' };
+const SEV_LABEL = { critical:'KRITISCH', major:'MAJOR', minor:'MINOR', obs:'OBS' };
+
+function getFilteredAudits() {
+ let list = [...audits];
+ if (auditTypeFilter !== 'all') list = list.filter(a => a.type === auditTypeFilter);
+ if (auditStatusFilter !== 'all') list = list.filter(a => a.status === auditStatusFilter);
+ if (auditSearch) list = list.filter(a => a.title.toLowerCase().includes(auditSearch) || a.country.toLowerCase().includes(auditSearch) || a.area.toLowerCase().includes(auditSearch));
+ return list;
+}
+
+function renderAuditGrid() {
+ const list = getFilteredAudits();
+ const grid = document.getElementById('auditGrid');
+ if (!grid) return;
+ if (!list.length) { grid.innerHTML = `<div style="padding:40px;text-align:center;color:var(--text-muted);">Keine Audits gefunden.</div>`; return; }
+ grid.innerHTML = list.map(a => {
+   const scoreHtml = a.score !== null
+     ? `<div class="audit-score-circle ${a.scoreClass}">${a.score}%</div>
+        <div>
+          <div style="font-size:12px;font-weight:600;color:var(--text);">${a.score>=90?'Exzellent':a.score>=80?'Gut':a.score>=70?'Ausreichend':'Mangelhaft'}</div>
+          <div style="font-size:11px;color:var(--text-muted);">${a.findings.length} Befunde · ${a.capas.length} CAPAs</div>
+        </div>`
+     : `<div style="font-size:28px;">📅</div><div><div style="font-size:12px;font-weight:600;color:var(--text);">Noch ausstehend</div><div style="font-size:11px;color:var(--text-muted);">Geplant für ${a.date}</div></div>`;
+   const topFindings = a.findings.slice(0,3).map(f =>
+     `<div class="finding">
+       <span class="finding-icon">${f.icon}</span>
+       <span class="finding-text">${f.text}</span>
+       <span class="finding-sev ${SEV_CLASS[f.sev]}">${SEV_LABEL[f.sev]}</span>
+     </div>`).join('');
+   return `<div class="audit-card" onclick="openAuditDetail(${a.id})">
+     <div class="audit-card-head">
+       <div class="audit-icon ${AUDIT_ICON_CLASS[a.type]}">${AUDIT_ICONS[a.type]}</div>
+       <div style="flex:1;">
+         <div class="audit-title">${a.title}</div>
+         <div class="audit-sub">${a.country} · ${a.area} · ${a.date}</div>
+         <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:5px;">
+           <span class="pill ${AUDIT_STATUS_PILL[a.status]}">${AUDIT_STATUS_LABELS[a.status]}</span>
+           <span class="tag tag-teal" style="font-size:9px;">${a.type==='internal'?'Intern':a.type==='external'?'Extern':a.type==='authority'?'Behörde':'Mock'}</span>
+         </div>
+       </div>
+     </div>
+     ${a.score !== null || a.findings.length ? `
+     <div class="audit-card-body">
+       <div class="audit-score-row">${scoreHtml}</div>
+       ${topFindings ? `<div class="audit-findings">${topFindings}</div>` : ''}
+     </div>` : ''}
+     <div class="audit-footer">
+       <span style="font-size:11px;color:var(--text-muted);">👤 ${a.auditor}</span>
+       <div style="display:flex;gap:6px;align-items:center;">
+         ${a.followup ? `<span style="font-size:10.5px;color:var(--text-muted);">Follow-Up: ${a.followup}</span>` : ''}
+         <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();openAuditDetail(${a.id})">Bericht öffnen →</button>
+       </div>
+     </div>
+   </div>`;
+ }).join('');
+}
+
+function openAuditDetail(id) {
+ const a = audits.find(x => x.id === id);
+ if (!a) return;
+ const capaHtml = a.capas.map(c => `<div class="capa-item">
+   <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
+     <div class="capa-title">${c.title}</div>
+     <span class="capa-status ${c.status==='done'?'capa-done':c.status==='wip'?'capa-wip':'capa-open'}">${c.status==='done'?'✓ Erledigt':c.status==='wip'?'◑ In Bearb.':'○ Offen'}</span>
+   </div>
+   <div class="capa-meta"><span>👤 ${c.owner}</span><span>📅 Fällig: ${c.due}</span></div>
+ </div>`).join('');
+ const findingsHtml = a.findings.map(f => `<div class="finding">
+   <span class="finding-icon">${f.icon}</span>
+   <span class="finding-text">${f.text}</span>
+   <span class="finding-sev ${SEV_CLASS[f.sev]}">${SEV_LABEL[f.sev]}</span>
+ </div>`).join('');
+ document.getElementById('auditDetailContent').innerHTML = `
+   <div class="modal-head">
+     <div>
+       <div style="font-size:10px;color:var(--gold);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:4px;">${a.type.toUpperCase()} AUDIT · ${a.country}</div>
+       <div style="font-family:'Cormorant Garamond',serif;font-size:19px;font-weight:700;color:var(--text);">${a.title}</div>
+       <div style="font-size:11.5px;color:var(--text-muted);margin-top:3px;">📅 ${a.date} · 👤 ${a.auditor}</div>
+     </div>
+     <button class="modal-close" onclick="document.getElementById('auditDetailModal').classList.remove('open')">✕</button>
+   </div>
+   <div class="modal-body">
+     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px;">
+       <div class="doc-stat"><div class="doc-stat-lbl">Score</div><div style="font-size:22px;font-weight:700;font-family:'Cormorant Garamond',serif;color:${a.score>=90?'var(--green-light)':a.score>=80?'var(--gold-bright)':a.score>=70?'#e8a840':'#e06060'};margin-top:4px;">${a.score!==null?a.score+'%':'–'}</div></div>
+       <div class="doc-stat"><div class="doc-stat-lbl">Befunde</div><div style="font-size:22px;font-weight:700;font-family:'Cormorant Garamond',serif;color:var(--text);margin-top:4px;">${a.findings.length}</div></div>
+       <div class="doc-stat"><div class="doc-stat-lbl">CAPAs gesamt</div><div style="font-size:22px;font-weight:700;font-family:'Cormorant Garamond',serif;color:var(--text);margin-top:4px;">${a.capas.length}</div></div>
+     </div>
+     <div class="modal-section">
+       <div class="modal-section-title">Executive Summary</div>
+       <div style="background:var(--surface3);border-radius:8px;padding:13px;font-size:12.5px;color:var(--text-muted);line-height:1.6;">${a.summary}</div>
+     </div>
+     ${findingsHtml ? `<div class="modal-section"><div class="modal-section-title">Audit-Befunde</div><div class="audit-findings">${findingsHtml}</div></div>` : ''}
+     ${capaHtml ? `<div class="modal-section"><div class="modal-section-title">CAPA-Maßnahmen</div>${capaHtml}</div>` : ''}
+     ${a.followup ? `<div class="info-alert">📅 Follow-Up geplant: <strong>${a.followup}</strong></div>` : ''}
+     <div style="display:flex;gap:8px;margin-top:16px;">
+       <button class="btn btn-gold" onclick="exportAuditPDF(${a.id})">⬇ Als PDF exportieren</button>
+       <button class="btn btn-ghost" onclick="document.getElementById('auditDetailModal').classList.remove('open')">Schließen</button>
+     </div>
+   </div>`;
+ document.getElementById('auditDetailModal').classList.add('open');
+}
+
+function filterAudits(type, el) {
+ auditTypeFilter = type;
+ document.querySelectorAll('.audit-sidebar .doc-filter-item').forEach(e => e.classList.remove('active'));
+ el.classList.add('active');
+ renderAuditGrid();
+}
+
+function filterAuditStatus(status, el) {
+ auditStatusFilter = status;
+ // Only reset status filter items, not type items
+ el.closest('.doc-filter-box').querySelectorAll('.doc-filter-item').forEach(e => e.classList.remove('active'));
+ el.classList.add('active');
+ renderAuditGrid();
+}
+
+function searchAudits(val) { auditSearch = val.toLowerCase(); renderAuditGrid(); }
+
+function openNewAuditModal() {
+ document.getElementById('newAuditDate').value = new Date().toISOString().split('T')[0];
+ document.getElementById('newAuditModal').classList.add('open');
+}
+function closeNewAuditModal() {
+ document.getElementById('newAuditModal').classList.remove('open');
+ selectedScore = null;
+ document.querySelectorAll('.score-opt').forEach(o => o.classList.remove('selected'));
+}
+
+function selectScore(el, val) {
+ document.querySelectorAll('.score-opt').forEach(o => o.classList.remove('selected'));
+ el.classList.add('selected');
+ selectedScore = parseInt(val);
+}
+
+function saveNewAudit() {
+ const title = document.getElementById('newAuditTitle').value.trim();
+ const type = document.getElementById('newAuditType').value;
+ const country = document.getElementById('newAuditCountry').value;
+ const date = document.getElementById('newAuditDate').value;
+ if (!title || !type || !country || !date) { alert('Bitte alle Pflichtfelder ausfüllen.'); return; }
+ const auditor = document.getElementById('newAuditAuditor').value.trim() || 'Dr. M. Keller';
+ const area = document.getElementById('newAuditArea').value || 'Allgemein';
+ const summary = document.getElementById('newAuditSummary').value.trim() || 'Kein Kommentar.';
+ const status = document.getElementById('newAuditStatus').value;
+ const followup = document.getElementById('newAuditFollowup').value || null;
+ const rawFindings = document.getElementById('newAuditFindings').value.trim();
+ const findings = rawFindings ? rawFindings.split('\n').filter(Boolean).map(l => {
+   const sevMatch = l.match(/\[(KRITISCH|CRITICAL|MAJOR|MINOR|OBS)\]/i);
+   const sev = sevMatch ? (sevMatch[1].toLowerCase() === 'kritisch' || sevMatch[1].toLowerCase() === 'critical' ? 'critical' : sevMatch[1].toLowerCase()) : 'obs';
+   const icons = { critical:'🔴', major:'🟠', minor:'🟡', obs:'🔵' };
+   return { sev, text: l.replace(/\[.*?\]\s*/,''), icon: icons[sev]||'🔵' };
+ }) : [];
+ const scoreClassMap = { 93:'score-excellent', 82:'score-good', 71:'score-fair', 60:'score-poor' };
+ const formattedDate = new Date(date).toLocaleDateString('de-DE', {day:'2-digit',month:'short',year:'numeric'}).replace('.','')+' '+new Date(date).getFullYear();
+ const newAudit = {
+   id: audits.length + 1, type, status,
+   title, area, country: country, date: formattedDate,
+   auditor, score: selectedScore, scoreClass: scoreClassMap[selectedScore] || '',
+   summary, findings, capas: [],
+   followup: followup ? new Date(followup).toLocaleDateString('de-DE',{day:'2-digit',month:'short',year:'numeric'}) : null,
+ };
+ audits.unshift(newAudit);
+ closeNewAuditModal();
+ renderAuditGrid();
+ // Reset form
+ ['newAuditTitle','newAuditSummary','newAuditFindings','newAuditAuditor'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+ ['newAuditType','newAuditCountry','newAuditArea','newAuditStatus'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+}
+
+function exportAuditPDF(id) {
+ const a = audits.find(x => x.id === id);
+ if (!a) return;
+ const content = `PHARMACOMPLY — AUDIT REPORT\n${'='.repeat(50)}\n\nTitel: ${a.title}\nDatum: ${a.date}\nAuditor: ${a.auditor}\nScope: ${a.country}\nBereich: ${a.area}\nScore: ${a.score !== null ? a.score + '%' : 'Ausstehend'}\nStatus: ${AUDIT_STATUS_LABELS[a.status]}\n\n${'─'.repeat(50)}\nEXECUTIVE SUMMARY\n${'─'.repeat(50)}\n${a.summary}\n\n${'─'.repeat(50)}\nBEFUNDE (${a.findings.length})\n${'─'.repeat(50)}\n${a.findings.map((f,i) => `${i+1}. [${SEV_LABEL[f.sev]}] ${f.text}`).join('\n') || 'Keine Befunde.'}\n\n${'─'.repeat(50)}\nCAPAs (${a.capas.length})\n${'─'.repeat(50)}\n${a.capas.map((c,i) => `${i+1}. ${c.title}\n   → Status: ${c.status} | Fällig: ${c.due} | Owner: ${c.owner}`).join('\n\n') || 'Keine CAPAs.'}\n\n${'─'.repeat(50)}\nExportiert von PharmaComply Platform — ${new Date().toLocaleDateString('de-DE')}`;
+ fakeDownload('Audit_Report_' + a.title.replace(/[^a-zA-Z0-9]/g,'_').slice(0,40) + '.txt', content);
+ document.getElementById('auditDetailModal').classList.remove('open');
+}
+
+// Close modals on overlay click
+document.addEventListener('click', e => {
+ if (e.target.id === 'newAuditModal') closeNewAuditModal();
+ if (e.target.id === 'auditDetailModal') document.getElementById('auditDetailModal').classList.remove('open');
+});
+
+function nav(id) {
+ document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+ document.querySelectorAll('.nav-item').forEach(n=>{
+   n.classList.remove('active');
+   if(n.getAttribute('onclick')===`nav('${id}')`) n.classList.add('active');
+ });
+ document.getElementById('page-'+id).classList.add('active');
+ document.getElementById('topbarTitle').textContent = titles[id]||id;
+}
+
+function filterCountries() {
+ const val = document.getElementById('statusFilter').value;
+ const f = val==='all' ? countries : countries.filter(c=>c.status===val);
+ document.getElementById('allCountryGrid').innerHTML = f.map(c=>renderCC(c)).join('');
+}
+
+function filterContacts(type, btn) {
+ document.querySelectorAll('.contacts-grid').length;
+ document.querySelectorAll('[onclick^="filterContacts"]').forEach(b=>{b.className='btn btn-ghost btn-sm';});
+ btn.className='btn btn-gold btn-sm';
+ const f = type==='all' ? allContacts : allContacts.filter(c=>c.type===type);
+ document.getElementById('contactsGrid').innerHTML = f.map(c=>renderContact(c)).join('');
+}
+
+function searchHandler(val) {
+ if(!val.trim()) return;
+ const q = val.toLowerCase();
+ const matched = countries.filter(c=>
+   c.name.toLowerCase().includes(q)||
+   c.tags.some(t=>t.toLowerCase().includes(q))||
+   c.laws.some(l=>l.name.toLowerCase().includes(q)||l.desc.toLowerCase().includes(q))
+ );
+ if(matched.length>0) {
+   nav('countries');
+   document.getElementById('allCountryGrid').innerHTML = matched.map(c=>renderCC(c)).join('');
+ }
+}
+
+// =================== AI CHAT ===================
+function doSend() {
+ const inp = document.getElementById('chatInput');
+ const msg = inp.value.trim();
+ if(!msg) return;
+ inp.value=''; inp.style.height='';
+ addMsg(msg,'user');
+ showTyping();
+ setTimeout(()=>{
+   hideTyping();
+   const r = getAIResponse(msg);
+   addMsg(r,'ai');
+ }, 700+Math.random()*600);
+}
+
+function quickSend(msg) {
+ document.getElementById('chatInput').value = msg;
+ doSend();
+}
+
+function addMsg(text, role) {
+ const ca = document.getElementById('chatArea');
+ const d = document.createElement('div');
+ d.className=`msg ${role}`;
+ // Convert markdown-like to HTML
+ let html = text
+   .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+   .replace(/\n/g,'<br>');
+ d.innerHTML=`<div class="msg-av ${role}-type">${role==='ai'?'🤖':'MK'}</div><div class="msg-bubble">${html}</div>`;
+ ca.appendChild(d); ca.scrollTop=ca.scrollHeight;
+}
+
+let typEl;
+function showTyping() {
+ const ca=document.getElementById('chatArea');
+ typEl=document.createElement('div'); typEl.className='msg ai'; typEl.id='typInd';
+ typEl.innerHTML=`<div class="msg-av ai-type">🤖</div><div class="msg-bubble"><div class="typing"><span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span></div></div>`;
+ ca.appendChild(typEl); ca.scrollTop=ca.scrollHeight;
+ document.getElementById('sendBtn').disabled=true;
+}
+function hideTyping() { typEl&&typEl.remove(); document.getElementById('sendBtn').disabled=false; }
+function clearChat() {
+ document.getElementById('chatArea').innerHTML=`<div class="msg ai"><div class="msg-av ai-type">🤖</div><div class="msg-bubble">Chat zurückgesetzt. Wie kann ich Ihnen helfen?</div></div>`;
+}
+function handleKey(e) { if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();doSend();} }
+function autoResize(el) { el.style.height=''; el.style.height=Math.min(el.scrollHeight,110)+'px'; }
+
+// =================== INIT ===================
+function init() {
+ document.getElementById('dashCountryGrid').innerHTML = countries.slice(0,4).map(c=>renderCC(c)).join('');
+ document.getElementById('allCountryGrid').innerHTML = countries.map(c=>renderCC(c)).join('');
+ document.getElementById('contactsGrid').innerHTML = allContacts.map(c=>renderContact(c)).join('');
+ document.getElementById('pricingContent').innerHTML = renderPricing();
+ document.getElementById('advertisingContent').innerHTML = renderAdvertising();
+ document.getElementById('updatesContent').innerHTML = renderUpdates();
+ renderDocGrid();
+ renderAuditGrid();
+}
+
+init();
+</script>
+
+</body>
+</html>
