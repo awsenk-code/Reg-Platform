@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Eisenhower Matrix</title>
+  <meta name="description" content="Prioritize projects and tasks with the Eisenhower matrix and turn them into concrete actions.">
+  <meta name="theme-color" content="#4f46e5">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Eisenhower">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <h1 class="topbar-title" id="view-title">Matrix</h1>
+    <div class="topbar-actions">
+      <button class="icon-btn" id="btn-theme" aria-label="Toggle theme" title="Toggle theme">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9Z"/></svg>
+      </button>
+      <button class="icon-btn" id="btn-settings" aria-label="Settings" title="Settings &amp; backup">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="view" id="view-matrix" data-title="Matrix">
+      <div class="filters" id="matrix-filters" role="toolbar" aria-label="Filter by project"></div>
+      <div class="matrix" id="matrix"></div>
+      <p class="hint">Rate tasks by importance and urgency, or drag them by the handle to another quadrant.</p>
+    </section>
+
+    <section class="view" id="view-actions" data-title="Actions" hidden></section>
+    <section class="view" id="view-projects" data-title="Projects" hidden></section>
+    <section class="view" id="view-insights" data-title="Insights" hidden></section>
+  </main>
+
+  <button class="fab" id="fab" aria-label="Add task">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+  </button>
+
+  <nav class="tabbar" aria-label="Main">
+    <button class="tab active" data-view="matrix">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="1.5"/></svg>
+      <span>Matrix</span>
+    </button>
+    <button class="tab" data-view="actions">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"/></svg>
+      <span>Actions</span><b class="badge" id="actions-badge" hidden></b>
+    </button>
+    <button class="tab" data-view="projects">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></svg>
+      <span>Projects</span>
+    </button>
+    <button class="tab" data-view="insights">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
+      <span>Insights</span>
+    </button>
+  </nav>
+
+  <dialog class="sheet" id="task-sheet" aria-labelledby="task-sheet-title">
+    <form method="dialog" id="task-form" novalidate>
+      <div class="sheet-head">
+        <h2 id="task-sheet-title">New task</h2>
+        <button type="button" class="icon-btn" data-close aria-label="Close">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+        </button>
+      </div>
+      <div class="sheet-body">
+        <label class="field">
+          <span>Title</span>
+          <input name="title" required maxlength="200" autocomplete="off" placeholder="What needs to be done?">
+        </label>
+        <label class="field">
+          <span>Project</span>
+          <select name="projectId"></select>
+        </label>
+
+        <div class="scores">
+          <label class="field">
+            <span>Importance <output name="importanceOut">3</output>/5</span>
+            <input type="range" name="importance" min="1" max="5" step="1" value="3">
+            <small class="scale"><span>Nice to have</span><span>Critical to goals</span></small>
+          </label>
+          <label class="field">
+            <span>Urgency <output name="urgencyOut">2</output>/5</span>
+            <input type="range" name="urgency" min="1" max="5" step="1" value="2">
+            <small class="scale"><span>Can wait</span><span>Needs attention now</span></small>
+          </label>
+        </div>
+
+        <label class="field">
+          <span>Deadline</span>
+          <input type="date" name="dueDate">
+        </label>
+
+        <div class="preview" id="quadrant-preview" aria-live="polite"></div>
+
+        <div class="q-fields" data-q="2">
+          <label class="field">
+            <span>Planned for</span>
+            <input type="date" name="scheduledDate">
+          </label>
+        </div>
+        <div class="q-fields" data-q="3">
+          <label class="field">
+            <span>Delegate to</span>
+            <input name="delegatedTo" maxlength="100" autocomplete="off" placeholder="Name of person or team" list="people-list">
+            <datalist id="people-list"></datalist>
+          </label>
+          <label class="field">
+            <span>Follow up on</span>
+            <input type="date" name="followUpDate">
+          </label>
+        </div>
+
+        <fieldset class="field subtasks">
+          <legend>Subtasks</legend>
+          <ul id="subtask-list"></ul>
+          <div class="subtask-add">
+            <input id="subtask-input" maxlength="200" placeholder="Add a subtask" autocomplete="off">
+            <button type="button" class="btn small" id="subtask-add-btn">Add</button>
+          </div>
+        </fieldset>
+
+        <label class="field">
+          <span>Notes</span>
+          <textarea name="notes" rows="3" maxlength="4000"></textarea>
+        </label>
+      </div>
+      <div class="sheet-foot">
+        <button type="button" class="btn danger ghost" id="task-delete">Delete</button>
+        <button type="button" class="btn ghost" id="task-reset-pin" hidden>Use scores</button>
+        <span class="spacer"></span>
+        <button type="submit" class="btn primary" value="save">Save</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog class="sheet" id="settings-sheet" aria-labelledby="settings-title">
+    <div class="sheet-head">
+      <h2 id="settings-title">Settings &amp; backup</h2>
+      <button type="button" class="icon-btn" data-close aria-label="Close">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+    </div>
+    <div class="sheet-body">
+      <h3>Reminders</h3>
+      <p class="muted">Get a notification when you open the app if tasks are due, overdue, or need a follow-up.</p>
+      <button class="btn" id="btn-notifications">Enable notifications</button>
+
+      <h3>Calendar</h3>
+      <p class="muted">Export planned dates, deadlines, and follow-ups as an .ics file for your calendar app.</p>
+      <button class="btn" id="btn-export-ics">Export calendar (.ics)</button>
+
+      <h3>Backup</h3>
+      <p class="muted">Your data is stored only on this device. Export a backup regularly or to move to another device.</p>
+      <div class="btn-row">
+        <button class="btn" id="btn-export-json">Export backup (JSON)</button>
+        <button class="btn" id="btn-export-csv">Export tasks (CSV)</button>
+      </div>
+      <div class="btn-row">
+        <label class="btn">Import backup<input type="file" id="import-file" accept="application/json,.json" hidden></label>
+        <label class="check"><input type="checkbox" id="import-merge" checked> Merge with existing data</label>
+      </div>
+
+      <h3>Danger zone</h3>
+      <div class="btn-row">
+        <button class="btn ghost" id="btn-sample">Load sample data</button>
+        <button class="btn danger" id="btn-clear">Delete all data</button>
+      </div>
+    </div>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
