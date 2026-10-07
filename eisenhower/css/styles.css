@@ -90,6 +90,9 @@ body {
 }
 
 button, input, select, textarea { font: inherit; color: inherit; }
+@media (pointer: coarse) {
+  input, select, textarea { font-size: 16px !important; }
+}
 svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 
 /* ---------- Top bar ---------- */
@@ -98,7 +101,7 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
   display: flex; align-items: center; justify-content: space-between;
   padding: calc(10px + var(--safe-t)) 16px 10px;
   background: color-mix(in srgb, var(--bg) 88%, transparent);
-  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--border);
 }
 .topbar-title { margin: 0; font-size: 20px; font-weight: 700; }
@@ -111,6 +114,9 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
 }
 .icon-btn:hover { background: var(--surface-2); color: var(--text); }
 .icon-btn.small { width: 32px; height: 32px; }
+.icon-btn.danger { color: var(--danger); }
+.chev { color: var(--muted); font-size: 13px; }
+@media (pointer: coarse) { .icon-btn.small { width: 40px; height: 40px; } }
 .icon-btn.small svg { width: 18px; height: 18px; }
 
 main { max-width: 1200px; margin: 0 auto; padding: 12px 16px; }
@@ -289,7 +295,7 @@ details.panel summary { cursor: pointer; list-style-position: outside; }
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
   display: grid; grid-template-columns: repeat(4, 1fr);
   height: calc(var(--tabbar-h) + var(--safe-b)); padding-bottom: var(--safe-b);
-  background: color-mix(in srgb, var(--surface) 94%, transparent); backdrop-filter: blur(10px);
+  background: color-mix(in srgb, var(--surface) 94%, transparent); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
   border-top: 1px solid var(--border);
 }
 .tab {
@@ -304,21 +310,31 @@ details.panel summary { cursor: pointer; list-style-position: outside; }
 }
 
 /* ---------- Sheets (dialogs) ---------- */
+/* --vvh / --kb are set from visualViewport in app.js so sheets stay above the on-screen keyboard (iOS). */
 .sheet {
-  width: min(640px, 100%); max-height: 92vh; margin: auto auto 0; padding: 0;
+  position: fixed; inset: 0 0 var(--kb, 0px) 0;
+  width: min(640px, 100%); max-width: 100%;
+  max-height: 92vh; max-height: calc(var(--vvh, 100dvh) - 16px);
+  margin: auto auto 0; padding: 0;
   border: 0; border-radius: 20px 20px 0 0; background: var(--surface); color: var(--text);
   box-shadow: 0 -10px 40px rgb(0 0 0 / 25%);
+  overflow: hidden;
 }
+/* Safari collapses flex: 1 (basis 0%) children of a container without a definite height, so use auto basis. */
 .sheet[open] { display: flex; flex-direction: column; animation: slide-up .22s ease-out; }
-.sheet > form { display: flex; flex-direction: column; min-height: 0; flex: 1; }
+.sheet > form { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; }
 .sheet::backdrop { background: rgb(10 12 25 / 45%); }
 @keyframes slide-up { from { transform: translateY(40px); opacity: 0; } }
 @media (min-width: 700px) {
-  .sheet { margin: auto; border-radius: 20px; }
+  .sheet { margin: auto; border-radius: 20px; max-height: calc(var(--vvh, 100dvh) - 48px); }
 }
-.sheet-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px 6px; }
+.sheet-head { flex: none; display: flex; align-items: center; justify-content: space-between; padding: 14px 16px 6px; }
 .sheet-head h2 { margin: 0; font-size: 18px; }
-.sheet-body { padding: 4px 16px 12px; overflow-y: auto; flex: 1; }
+.sheet-body { flex: 1 1 auto; min-height: 0; padding: 4px 16px 12px; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
+.sheet-foot { flex: none; }
+.modal { width: min(420px, calc(100% - 32px)); margin: auto; border-radius: 18px; }
+.modal .sheet-body p { font-size: 15px; }
+.modal .field input { margin-top: 4px; }
 .sheet-body h3 { margin: 18px 0 2px; font-size: 15px; }
 .sheet-body h3:first-child { margin-top: 4px; }
 .sheet-body p { margin: 2px 0 8px; font-size: 13.5px; }
