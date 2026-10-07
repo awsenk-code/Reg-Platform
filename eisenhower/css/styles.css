@@ -390,3 +390,58 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
 @media (prefers-reduced-motion: reduce) {
   * { animation: none !important; transition: none !important; }
 }
+
+/* ---------- Team ---------- */
+.avatar {
+  --mc: #9ca3af;
+  display: inline-grid; place-items: center; flex: none;
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--mc); color: #fff; font-size: 11.5px; font-weight: 700; letter-spacing: .02em;
+  box-shadow: 0 0 0 2px var(--surface);
+}
+.avatar.small { width: 20px; height: 20px; font-size: 9px; margin-right: 6px; vertical-align: -4px; }
+.avatar.large { width: 44px; height: 44px; font-size: 16px; }
+.card.owned { border-left: 4px solid var(--mc); }
+.chip.person { padding-left: 6px; }
+.chip.person .avatar.small { margin-right: 0; }
+.owners { display: inline-flex; margin-left: auto; }
+.owners .avatar.small { margin-right: -4px; }
+.mini-dist { align-items: center; }
+
+.team-btn { position: relative; width: 44px; }
+.team-btn .avatar { width: 30px; height: 30px; }
+.sync-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: var(--muted); }
+.team-btn .sync-dot { position: absolute; right: 4px; bottom: 5px; box-shadow: 0 0 0 2px var(--bg); }
+.sync-dot.ok { background: var(--ok); }
+.sync-dot.syncing { background: var(--q2); animation: pulse 1s infinite alternate; }
+.sync-dot.offline { background: var(--warn); }
+.sync-dot.error { background: var(--danger); }
+@keyframes pulse { to { opacity: .35; } }
+.sync-line { display: flex; gap: 6px; align-items: baseline; flex-wrap: wrap; }
+
+.team-me { display: flex; align-items: center; gap: 12px; margin: 8px 0; flex-wrap: wrap; }
+.team-me > div { flex: 1; min-width: 140px; }
+.color-pick { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
+.color-pick input { width: 34px; height: 34px; border: 0; padding: 0; background: none; cursor: pointer; }
+.team-fields { display: grid; gap: 0; }
+.private-check { margin: -2px 0 6px; }
+.private-check input:disabled + * { opacity: .5; }
+
+.table-wrap { overflow-x: auto; }
+.team-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.team-table th, .team-table td { padding: 6px 6px; text-align: center; border-top: 1px solid var(--border); white-space: nowrap; }
+.team-table thead th { border-top: 0; color: var(--muted); font-weight: 600; font-size: 12px; }
+.team-table th[scope=row], .team-table thead th:first-child { text-align: left; }
+.person-link { border: 0; background: none; cursor: pointer; padding: 0; display: inline-flex; align-items: center; font-weight: 500; }
+
+.auth {
+  position: fixed; inset: 0; z-index: 150; display: grid; place-items: center; padding: 24px;
+  background: var(--bg);
+}
+.auth-card { width: min(400px, 100%); text-align: center; display: grid; gap: 12px; justify-items: center; }
+.auth-card img { border-radius: 18px; }
+.auth-card h2 { margin: 4px 0 0; font-size: 24px; }
+.auth-card p { margin: 0; color: var(--muted); }
+.btn.big { min-height: 50px; padding: 10px 20px; font-size: 16px; width: 100%; }
+.btn .ms { width: 20px; height: 20px; }
+.auth-error { color: var(--danger) !important; font-size: 14px; }

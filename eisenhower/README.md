@@ -17,14 +17,28 @@ A mobile-first, offline-capable Progressive Web App to sort projects and tasks i
 - **Insights**: distribution, coaching recommendations (e.g. "firefighting mode"), completed and archived tasks.
 - **Reminders**: system notification when the app is opened or resumed, for tasks that are due, overdue, planned today, or need a follow-up (once per task and day), plus app icon badge.
 - **Backup**: JSON export/import (merge or replace), CSV export, calendar export (.ics).
-- Light and dark mode. All data stays on the device (localStorage).
+- Light and dark mode. Without team mode all data stays on the device (localStorage).
+
+## Team mode (Microsoft 365)
+
+Optional. When `js/config.js` is filled in (see [TEAM-SETUP.md](TEAM-SETUP.md)), team members sign in with their Microsoft work account:
+
+- **Shared projects, own matrix:** projects are visible to the whole team. Every task has an owner and everyone sees their own matrix by default. The person filter switches to a teammate's matrix or to *Everyone*.
+- **Colors:** each member has a color and initials badge (choose yours in Settings), and cards in team views get a colored edge. Project colors stay as before.
+- **Delegate to a teammate:** delegating a Q3 task to a member (Actions view or editor) moves it into their matrix. It stays in your *Waiting for* list with a follow-up date.
+- **Private tasks** (🔒) are stored in your own OneDrive app folder and are never visible to others.
+- **Offline first:** everything works offline. Changes are queued and synced when online (on change, on resume, and every 30 s). The dot on your avatar shows the sync state.
+- **Team overview** in Insights: open tasks per quadrant, completed in 7 days and open delegations per member.
+- All members have equal rights. Only the creator can delete a project.
+
+Data is stored in three SharePoint lists (`EisenhowerProjects`, `EisenhowerTasks`, `EisenhowerMembers`) as JSON per row, using Microsoft Graph with delegated permissions. Sign-in uses MSAL.js (bundled in `vendor/`, MIT license) with the redirect flow, which works in installed iOS home-screen apps.
 
 ## Run locally
 
 ```bash
 cd eisenhower
 npm start          # serves on http://localhost:8080 (python3 -m http.server)
-npm test           # unit tests for the domain logic (Node ≥ 20)
+npm test           # unit tests for domain logic and sync (Node ≥ 20)
 ```
 
 Service workers and installation need `localhost` or HTTPS.
@@ -42,7 +56,11 @@ eisenhower/
 ├── index.html            app shell and dialogs
 ├── css/styles.css        mobile-first styles, light/dark theme
 ├── js/logic.js           pure domain logic (classification, action plan, exports), unit-tested
-├── js/store.js           persistence (localStorage) and CRUD
+├── js/store.js           persistence (localStorage), CRUD, outbox of unsynced changes
+├── js/config.js          team mode settings (Microsoft 365)
+├── js/team/sync.js       offline-first sync engine (push outbox, pull, merge)
+├── js/team/graph.js      Microsoft Graph backend (MSAL sign-in, SharePoint lists, OneDrive)
+├── vendor/               MSAL.js
 ├── js/app.js             UI rendering, drag & drop, reminders
 ├── sw.js                 offline cache
 ├── manifest.webmanifest  PWA manifest

@@ -15,8 +15,12 @@ import {
   tasksToCSV,
   tasksToICS,
   openTasks,
+  ownsTask,
+  isDelegatedAway,
 } from './logic.js';
-import { store, uid } from './store.js';
+import { store, uid, MEMBER_COLORS } from './store.js';
+import { TeamSync } from './team/sync.js';
+import { TEAM } from './config.js';
 
 // ---------- Helpers ----------
 
@@ -111,14 +115,47 @@ const projectColor = (id) => store.project(id)?.color || 'var(--muted)';
 const ui = {
   view: 'matrix',
   projectFilter: 'all', // 'all' | 'none' | project id
+  person: 'me', // team mode: 'me' | 'all' | member id
   expandedProject: null,
 };
 
-function filteredOpenTasks() {
-  let tasks = openTasks(store.state.tasks);
-  if (ui.projectFilter === 'none') tasks = tasks.filter((t) => !t.projectId);
-  else if (ui.projectFilter !== 'all') tasks = tasks.filter((t) => t.projectId === ui.projectFilter);
+// ---------- Team helpers ----------
+
+const meId = () => store.meId;
+const memberName = (id) => store.member(id)?.name || (id === meId() ? 'Me' : 'Unknown');
+const firstName = (id) => memberName(id).split(/\s+/)[0];
+const memberColor = (id) => store.member(id)?.color || '#9ca3af';
+
+function initials(name) {
+  const parts = String(name).trim().split(/\s+/).filter(Boolean);
+  return ((parts[0]?.[0] || '?') + (parts.length > 1 ? parts[parts.length - 1][0] : '')).toUpperCase();
+}
+
+function avatar(id, extraClass = '') {
+  return `<span class="avatar ${extraClass}" style="--mc:${esc(memberColor(id))}" title="${esc(memberName(id))}">${esc(initials(memberName(id)))}</span>`;
+}
+
+function findMemberByName(name) {
+  const n = name.trim().toLowerCase();
+  return store.state.members.find((m) => m.name.toLowerCase() === n || m.email.toLowerCase() === n || m.name.split(/\s+/)[0].toLowerCase() === n) || null;
+}
+
+// Tasks of the person selected in the team filter (everything in local mode).
+function visibleTasks() {
+  const tasks = store.state.tasks;
+  if (!meId() || ui.person === 'all') return tasks;
+  if (ui.person === 'me') return tasks.filter((t) => ownsTask(t, meId()));
+  return tasks.filter((t) => t.ownerId === ui.person);
+}
+
+function projectFiltered(tasks) {
+  if (ui.projectFilter === 'none') return tasks.filter((t) => !t.projectId);
+  if (ui.projectFilter !== 'all') return tasks.filter((t) => t.projectId === ui.projectFilter);
   return tasks;
+}
+
+function filteredOpenTasks() {
+  return openTasks(projectFiltered(visibleTasks()));
 }
 
 // ---------- Rendering ----------
@@ -132,7 +169,7 @@ function render() {
 }
 
 function renderBadge() {
-  const plan = buildActionPlan(store.state.tasks, today());
+  const plan = buildActionPlan(store.state.tasks, today(), meId());
   const n = plan.doNow.length + plan.scheduledToday.length + plan.followUps.length;
   const badge = $('#actions-badge');
   badge.hidden = n === 0;
@@ -148,14 +185,18 @@ function taskCard(task, { draggable = true } = {}) {
   if (task.dueDate) meta.push(`<span class="tag due ${dueClass(task.dueDate)}" title="Deadline ${esc(task.dueDate)}">⏰ ${esc(formatDate(task.dueDate))}</span>`);
   if (task.scheduledDate && c.quadrant === 2) meta.push(`<span class="tag" title="Planned for ${esc(task.scheduledDate)}">📅 ${esc(formatDate(task.scheduledDate))}</span>`);
   if (task.delegatedTo) meta.push(`<span class="tag" title="Delegated">👤 ${esc(task.delegatedTo)}</span>`);
+  if (meId() && task.delegatedById && task.delegatedById !== meId() && task.ownerId === meId()) meta.push(`<span class="tag" title="Delegated to you">↘ from ${esc(firstName(task.delegatedById))}</span>`);
+  if (isDelegatedAway(task, meId())) meta.push(`<span class="tag" title="You delegated this">↗ ${esc(firstName(task.ownerId))}</span>`);
+  if (task.private) meta.push('<span class="tag" title="Private: only you can see this">🔒</span>');
   if (task.subtasks.length) meta.push(`<span class="tag">☑ ${subDone}/${task.subtasks.length}</span>`);
   if (c.pinned) meta.push('<span class="tag" title="Placed manually">📌</span>');
   if (c.escalated) meta.push('<span class="tag soon" title="Escalated by deadline">⬆ deadline</span>');
-  return `<li class="card" data-id="${esc(task.id)}">
+  const showOwner = meId() && task.ownerId && (ui.person !== 'me' || task.ownerId !== meId());
+  return `<li class="card ${showOwner ? 'owned' : ''}" data-id="${esc(task.id)}" ${showOwner ? `style="--mc:${esc(memberColor(task.ownerId))}"` : ''}>
     ${draggable ? '<button class="handle" aria-label="Drag to another quadrant" title="Drag to move"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="6" r="1.4"/><circle cx="15" cy="6" r="1.4"/><circle cx="9" cy="12" r="1.4"/><circle cx="15" cy="12" r="1.4"/><circle cx="9" cy="18" r="1.4"/><circle cx="15" cy="18" r="1.4"/></svg></button>' : ''}
     <input type="checkbox" class="complete" aria-label="Mark done" ${task.status === 'done' ? 'checked' : ''}>
     <button class="card-body" data-edit="${esc(task.id)}">
-      <span class="card-title">${esc(task.title)}</span>
+      <span class="card-title">${showOwner ? avatar(task.ownerId, 'small') : ''}${esc(task.title)}</span>
       ${meta.length ? `<span class="card-meta">${meta.join('')}</span>` : ''}
     </button>
   </li>`;
@@ -166,9 +207,11 @@ function renderMatrix() {
   if (ui.projectFilter !== 'all' && ui.projectFilter !== 'none' && !store.project(ui.projectFilter)) ui.projectFilter = 'all';
   const chip = (value, label, color) => `<button class="chip ${ui.projectFilter === value ? 'active' : ''}" data-filter="${esc(value)}">${color ? `<i class="dot" style="background:${esc(color)}"></i>` : ''}${esc(label)}</button>`;
   $('#matrix-filters').innerHTML = [chip('all', 'All'), ...projects.map((p) => chip(p.id, p.name, p.color)), chip('none', 'No project')].join('');
+  renderPersonFilters();
 
   const byQ = { 1: [], 2: [], 3: [], 4: [] };
   for (const t of filteredOpenTasks()) byQ[classify(t, today()).quadrant].push(t);
+  const canDrag = (t) => ownsTask(t, meId());
 
   $('#matrix').innerHTML = [1, 2, 3, 4].map((q) => {
     const Q = QUADRANTS[q];
@@ -181,16 +224,27 @@ function renderMatrix() {
         </div>
         <button class="icon-btn small" data-add-q="${q}" aria-label="Add task to ${esc(Q.name)}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
       </header>
-      <ul class="cards">${list.map((t) => taskCard(t)).join('') || '<li class="empty">Nothing here</li>'}</ul>
+      <ul class="cards">${list.map((t) => taskCard(t, { draggable: canDrag(t) })).join('') || '<li class="empty">Nothing here</li>'}</ul>
     </section>`;
   }).join('');
 }
 
+function renderPersonFilters() {
+  const el = $('#person-filters');
+  el.hidden = !meId();
+  if (!meId()) return;
+  if (!['me', 'all'].includes(ui.person) && !store.member(ui.person)) ui.person = 'me';
+  const others = store.state.members.filter((m) => m.id !== meId()).sort((a, b) => a.name.localeCompare(b.name));
+  const chip = (value, label, id) => `<button class="chip person ${ui.person === value ? 'active' : ''}" data-person="${esc(value)}">${id ? avatar(id, 'small') : ''}${esc(label)}</button>`;
+  el.innerHTML = [chip('me', 'My matrix', meId()), ...others.map((m) => chip(m.id, m.name.split(/\s+/)[0], m.id)), chip('all', 'Everyone')].join('');
+}
+
 function actionItem(task, buttons, extra = '') {
-  const na = nextAction(task, today());
+  const na = nextAction(task, today(), { meId: meId(), nameOf: firstName });
+  const away = isDelegatedAway(task, meId());
   return `<li class="action-item" data-id="${esc(task.id)}">
     <button class="card-body" data-edit="${esc(task.id)}">
-      <span class="card-title">${esc(task.title)}</span>
+      <span class="card-title">${away ? avatar(task.ownerId, 'small') : ''}${esc(task.title)}</span>
       <span class="card-meta">
         ${task.projectId ? `<span class="tag"><i class="dot" style="background:${esc(projectColor(task.projectId))}"></i>${esc(projectName(task.projectId))}</span>` : ''}
         ${task.dueDate ? `<span class="tag due ${dueClass(task.dueDate)}">⏰ ${esc(formatDate(task.dueDate))}</span>` : ''}
@@ -212,7 +266,7 @@ function actionSection(id, title, q, hint, items) {
 }
 
 function renderActions() {
-  const plan = buildActionPlan(filteredOpenTasks(), today());
+  const plan = buildActionPlan(openTasks(projectFiltered(store.state.tasks)), today(), meId());
   const done = '<button class="btn small primary" data-act="done">Done</button>';
   const tomorrow = addDays(todayISO(), 1);
   const nextWeek = addDays(todayISO(), 7);
@@ -244,6 +298,9 @@ function filterNotice() {
   return `<p class="filter-notice">Filtered by <b>${esc(label)}</b> <button class="btn small ghost" data-filter="all">Show all</button></p>`;
 }
 
+// Team mode: projects can be deleted by the person who created them (or anyone for legacy ones).
+const canDeleteProject = (p) => !meId() || !p.createdBy || p.createdBy === meId();
+
 function renderProjects() {
   const tasks = store.state.tasks;
   const projects = store.state.projects;
@@ -252,6 +309,7 @@ function renderProjects() {
     const open = tasks.filter((t) => t.projectId === p.id && t.status === 'open');
     const dist = distribution(open, today());
     const expanded = ui.expandedProject === p.id;
+    const owners = meId() ? [...new Set(open.map((t) => t.ownerId).filter(Boolean))] : [];
     const list = sortTasks(tasks.filter((t) => t.projectId === p.id && t.status !== 'archived'), today())
       .sort((a, b) => (a.status === 'done') - (b.status === 'done'));
     return `<li class="project ${expanded ? 'expanded' : ''}" data-project="${esc(p.id)}">
@@ -260,10 +318,10 @@ function renderProjects() {
         <button class="project-name" data-act="toggle" aria-expanded="${expanded}">${esc(p.name)} <span class="chev" aria-hidden="true">${expanded ? '▾' : '▸'}</span></button>
         <span class="muted small">${prog.done}/${prog.total}</span>
         <button class="icon-btn small" data-act="rename" aria-label="Rename project" title="Rename"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
-        <button class="icon-btn small danger" data-act="delete" aria-label="Delete project" title="Delete"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg></button>
+        ${canDeleteProject(p) ? `<button class="icon-btn small danger" data-act="delete" aria-label="Delete project" title="Delete"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg></button>` : ''}
       </div>
       <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(prog.ratio * 100)}"><span style="width:${prog.ratio * 100}%;background:${esc(p.color)}"></span></div>
-      <div class="mini-dist">${[1, 2, 3, 4].map((q) => `<span class="mini q${q}" title="${esc(QUADRANTS[q].name)}">Q${q} ${dist[q]}</span>`).join('')}</div>
+      <div class="mini-dist">${[1, 2, 3, 4].map((q) => `<span class="mini q${q}" title="${esc(QUADRANTS[q].name)}">Q${q} ${dist[q]}</span>`).join('')}${owners.length ? `<span class="owners">${owners.map((id) => avatar(id, 'small')).join('')}</span>` : ''}</div>
       ${expanded ? `<ul class="cards plain">${list.map((t) => taskCard(t, { draggable: false })).join('') || '<li class="empty">No tasks yet</li>'}</ul>
       <div class="btn-row">
         <button class="btn small primary" data-act="add">Add task</button>
@@ -281,8 +339,29 @@ function renderProjects() {
     ${unassigned ? `<p class="muted">${unassigned} open task${unassigned === 1 ? '' : 's'} without a project. <button class="btn small ghost" data-filter="none">Show</button></p>` : ''}`;
 }
 
+function teamPanel() {
+  if (!meId()) return '';
+  const weekAgo = Date.now() - 7 * 86400000;
+  const rows = [...store.state.members].sort((a, b) => (a.id === meId() ? -1 : b.id === meId() ? 1 : a.name.localeCompare(b.name))).map((m) => {
+    const own = store.state.tasks.filter((t) => t.ownerId === m.id);
+    const dist = distribution(own, today());
+    const done = own.filter((t) => t.status === 'done' && t.completedAt && Date.parse(t.completedAt) >= weekAgo).length;
+    const waiting = store.state.tasks.filter((t) => t.status === 'open' && t.delegatedById === m.id && t.ownerId !== m.id).length;
+    return `<tr><th scope="row"><button class="person-link" data-person="${esc(m.id)}">${avatar(m.id, 'small')}${esc(m.name)}</button></th>
+      ${[1, 2, 3, 4].map((q) => `<td class="q${q}"><span class="mini">${dist[q]}</span></td>`).join('')}<td>${done}</td><td>${waiting}</td></tr>`;
+  }).join('');
+  return `<section class="panel">
+    <h2>Team</h2>
+    <div class="table-wrap"><table class="team-table">
+      <thead><tr><th>Member</th><th>Q1</th><th>Q2</th><th>Q3</th><th>Q4</th><th title="Done in the last 7 days">Done 7d</th><th title="Delegated by them, still open">Waiting</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table></div>
+    <p class="muted small">Private tasks are not included.</p>
+  </section>`;
+}
+
 function renderInsights() {
-  const tasks = store.state.tasks;
+  const tasks = visibleTasks();
   const open = openTasks(tasks);
   const dist = distribution(tasks, today());
   const total = open.length || 1;
@@ -293,6 +372,7 @@ function renderInsights() {
   const done = tasks.filter((t) => t.status === 'done').sort((a, b) => (b.completedAt || '').localeCompare(a.completedAt || ''));
 
   $('#view-insights').innerHTML = `
+    ${meId() ? `<div class="filters" role="toolbar" aria-label="Person">${$('#person-filters').innerHTML}</div>` : ''}
     <div class="stats">
       <div class="stat"><b>${open.length}</b><span>Open</span></div>
       <div class="stat"><b>${doneWeek}</b><span>Done in 7 days</span></div>
@@ -306,6 +386,7 @@ function renderInsights() {
           <span class="bar-val">${dist[q]} · ${Math.round((dist[q] / total) * 100)}%</span></li>`).join('')}
       </ul>
     </section>
+    ${teamPanel()}
     <section class="panel">
       <h2>Recommendations</h2>
       <ul class="recs">${recommendations(tasks, today()).map((r) => `<li class="rec ${r.level}">${esc(r.text)}</li>`).join('')}</ul>
@@ -321,7 +402,8 @@ function renderInsights() {
 }
 
 function updatePeopleList() {
-  const people = [...new Set(store.state.tasks.map((t) => t.delegatedTo).filter(Boolean))].sort();
+  const teammates = store.state.members.filter((m) => m.id !== meId()).map((m) => m.name);
+  const people = [...new Set([...teammates, ...store.state.tasks.map((t) => t.delegatedTo).filter(Boolean)])].sort();
   $('#people-list').innerHTML = people.map((p) => `<option value="${esc(p)}">`).join('');
 }
 
@@ -387,6 +469,14 @@ function openEditor(id = null, presets = {}) {
   f.delegatedTo.value = t.delegatedTo || '';
   f.followUpDate.value = t.followUpDate || '';
   f.notes.value = t.notes || '';
+  $('#team-fields').hidden = !meId();
+  if (meId()) {
+    const members = [...store.state.members].sort((a, b) => (a.id === meId() ? -1 : b.id === meId() ? 1 : a.name.localeCompare(b.name)));
+    f.ownerId.innerHTML = members.map((m) => `<option value="${esc(m.id)}">${esc(m.id === meId() ? `${m.name} (me)` : m.name)}</option>`).join('');
+    f.ownerId.value = t.ownerId || meId();
+    f.private.checked = Boolean(t.private);
+    syncPrivateToggle();
+  }
   $('#task-delete').hidden = !task;
   $('#subtask-input').value = '';
   updatePeopleList();
@@ -394,7 +484,20 @@ function openEditor(id = null, presets = {}) {
   updatePreview();
   sheet.showModal();
   if (!task) f.title.focus();
+  team.sync?.syncNow();
 }
+
+// Private tasks live in my own OneDrive, so they can only belong to me.
+function syncPrivateToggle() {
+  const f = form.elements;
+  const mine = f.ownerId.value === meId();
+  f.private.disabled = !mine;
+  if (!mine) f.private.checked = false;
+}
+
+form.addEventListener('change', (e) => {
+  if (e.target.name === 'ownerId') syncPrivateToggle();
+});
 
 form.addEventListener('input', (e) => {
   if (e.target.name === 'importance' || e.target.name === 'urgency') editor.override = null; // re-rating replaces a manual placement
@@ -450,8 +553,25 @@ form.addEventListener('submit', (e) => {
     f.title.setCustomValidity('');
     return;
   }
-  const delegatedTo = f.delegatedTo.value.trim();
+  const task = editor.id ? store.task(editor.id) : null;
+  let delegatedTo = f.delegatedTo.value.trim();
+  const team = {};
+  if (meId()) {
+    // "Delegate to" a teammate hands the task over to their matrix.
+    let ownerId = f.ownerId.value || meId();
+    const member = delegatedTo && findMemberByName(delegatedTo);
+    if (member && member.id !== meId()) {
+      ownerId = member.id;
+      delegatedTo = '';
+    }
+    const prevOwner = task?.ownerId || meId();
+    team.ownerId = ownerId;
+    team.delegatedById = ownerId === prevOwner ? task?.delegatedById || null : ownerId === meId() ? null : meId();
+    team.private = ownerId === meId() && f.private.checked;
+  }
+  const handedOver = team.delegatedById === meId() && team.ownerId !== meId();
   const fields = {
+    ...team,
     title,
     projectId: f.projectId.value || null,
     importance: Number(f.importance.value),
@@ -459,7 +579,7 @@ form.addEventListener('submit', (e) => {
     dueDate: f.dueDate.value || null,
     scheduledDate: f.scheduledDate.value || null,
     delegatedTo,
-    followUpDate: f.followUpDate.value || (delegatedTo ? addDays(todayISO(), 3) : null),
+    followUpDate: f.followUpDate.value || (delegatedTo || handedOver ? addDays(todayISO(), 3) : null),
     notes: f.notes.value.trim(),
     override: editor.override,
     subtasks: editor.subtasks,
@@ -467,6 +587,7 @@ form.addEventListener('submit', (e) => {
   if (editor.id) store.updateTask(editor.id, fields);
   else store.addTask(fields);
   sheet.close();
+  if (handedOver && task?.ownerId !== fields.ownerId) return toast(`Delegated to ${firstName(fields.ownerId)}. Follow-up ${formatDate(fields.followUpDate)}.`);
   const q = classify(fields, today()).quadrant;
   toast(`Saved to Q${q} · ${QUADRANTS[q].name}`);
 });
@@ -476,7 +597,7 @@ $('#task-delete').addEventListener('click', () => {
   if (!task) return;
   store.deleteTask(task.id);
   sheet.close();
-  toast('Task deleted', { label: 'Undo', run: () => store.addTask(task) });
+  toast('Task deleted', { label: 'Undo', run: () => store.restoreTask(task) });
 });
 
 for (const dlg of $$('dialog')) {
@@ -516,8 +637,15 @@ function handleAction(act, id, el) {
         input.focus();
         return;
       }
-      store.updateTask(id, { delegatedTo: who, followUpDate: task.followUpDate || addDays(todayISO(), 3) });
-      toast(`Delegated to ${who}. Follow-up in 3 days.`);
+      const member = meId() && findMemberByName(who);
+      const followUpDate = task.followUpDate || addDays(todayISO(), 3);
+      if (member && member.id !== meId()) {
+        store.updateTask(id, { ownerId: member.id, delegatedById: meId(), delegatedTo: '', private: false, followUpDate });
+        toast(`Delegated to ${firstName(member.id)}. It is now in their matrix.`);
+      } else {
+        store.updateTask(id, { delegatedTo: who, followUpDate });
+        toast(`Delegated to ${who}. Follow-up in 3 days.`);
+      }
       break;
     }
     case 'archive':
@@ -529,7 +657,7 @@ function handleAction(act, id, el) {
       break;
     case 'purge':
       store.deleteTask(id);
-      toast('Deleted', { label: 'Undo', run: () => store.addTask(task) });
+      toast('Deleted', { label: 'Undo', run: () => store.restoreTask(task) });
       break;
     case 'edit':
       openEditor(id);
@@ -541,8 +669,16 @@ document.addEventListener('click', (e) => {
   const tab = e.target.closest('.tab');
   if (tab) {
     ui.view = tab.dataset.view;
+    if (ui.view === 'actions') team.sync?.syncNow(); // fresh member list before delegating
     render();
     window.scrollTo({ top: 0 });
+    return;
+  }
+  const person = e.target.closest('[data-person]');
+  if (person) {
+    ui.person = person.dataset.person;
+    if (ui.view !== 'insights') ui.view = 'matrix';
+    render();
     return;
   }
   const filter = e.target.closest('[data-filter]');
@@ -625,9 +761,7 @@ function handleProjectAction(act, id) {
         store.deleteProject(id);
         toast(`Project "${p.name}" deleted`, {
           label: 'Undo',
-          run: () => {
-            store.importData({ projects: [...store.state.projects, p], tasks: store.state.tasks.map((t) => (taskIds.includes(t.id) ? { ...t, projectId: id } : t)) });
-          },
+          run: () => store.restoreProject(p, taskIds),
         });
       });
       break;
@@ -704,10 +838,12 @@ document.addEventListener('pointercancel', (e) => endDrag(e, true));
 // ---------- Settings, backup, reminders ----------
 
 const settingsSheet = $('#settings-sheet');
-$('#btn-settings').addEventListener('click', () => {
+function openSettings() {
   updateNotificationButton();
+  renderTeamSettings();
   settingsSheet.showModal();
-});
+}
+$('#btn-settings').addEventListener('click', openSettings);
 
 function applyTheme() {
   const t = store.settings.theme;
@@ -818,7 +954,7 @@ function checkReminders(force = false) {
   if (!store.settings.notifications || !('Notification' in window) || Notification.permission !== 'granted') return;
   const key = todayISO();
   const notified = store.settings.notified?.[key] || [];
-  const fresh = dueReminders(store.state.tasks, today()).filter((r) => force || !notified.includes(`${r.task.id}:${r.kind}`));
+  const fresh = dueReminders(store.state.tasks, today(), meId()).filter((r) => force || !notified.includes(`${r.task.id}:${r.kind}`));
   if (!fresh.length) return;
   const label = { overdue: 'Overdue', due: 'Due today', followup: 'Follow up', scheduled: 'Planned today' };
   const body = fresh.slice(0, 5).map((r) => `${label[r.kind]}: ${r.task.title}`).join('\n') + (fresh.length > 5 ? `\n+${fresh.length - 5} more` : '');
@@ -826,13 +962,224 @@ function checkReminders(force = false) {
   store.saveSettings({ notified: { [key]: [...new Set([...notified, ...fresh.map((r) => `${r.task.id}:${r.kind}`)])] } });
 }
 
+// ---------- Team mode (Microsoft 365) ----------
+
+const teamConfigured = Boolean(TEAM.clientId && TEAM.tenantId && TEAM.siteHostname && TEAM.sitePath);
+const team = { remote: null, sync: null, account: null, status: { state: 'idle', lastSync: null, error: null } };
+
+async function createRemote() {
+  if (typeof window.__EISENHOWER_REMOTE__ === 'function') return window.__EISENHOWER_REMOTE__(); // automated tests
+  if (!teamConfigured) return null;
+  const { GraphRemote } = await import('./team/graph.js');
+  return new GraphRemote(TEAM);
+}
+
+const SYNC_LABEL = { idle: 'Not synced yet', syncing: 'Syncing…', ok: 'Up to date', offline: 'Offline: changes are saved and sent later', error: 'Sync problem' };
+
+function renderTeamButton() {
+  const btn = $('#btn-team');
+  btn.hidden = !team.remote;
+  if (!team.remote) return;
+  const state = team.status.state;
+  btn.innerHTML = meId() ? `${avatar(meId())}<i class="sync-dot ${state}" aria-hidden="true"></i>` : '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>';
+  btn.title = meId() ? `${memberName(meId())} · ${SYNC_LABEL[state]}` : 'Sign in to your team';
+  btn.setAttribute('aria-label', btn.title);
+}
+
+function renderTeamSettings() {
+  const el = $('#team-settings');
+  el.hidden = !team.remote;
+  $('#btn-sample').hidden = Boolean(meId());
+  $('#btn-clear').textContent = meId() ? 'Delete my tasks' : 'Delete all data';
+  if (!team.remote) return;
+  if (!meId()) {
+    el.innerHTML = `<h3>Team</h3>
+      <p class="muted">Share projects with your team and delegate tasks to colleagues. Sign in with your Microsoft work account.</p>
+      <button class="btn primary" data-team="login">Sign in with Microsoft</button>`;
+    return;
+  }
+  const me = store.member(meId());
+  const st = team.status;
+  const last = st.lastSync ? new Date(st.lastSync).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }) : 'never';
+  el.innerHTML = `<h3>Team</h3>
+    <div class="team-me">${avatar(meId(), 'large')}<div><b>${esc(me?.name || team.account?.name || '')}</b><br><span class="muted small">${esc(team.account?.email || me?.email || '')}</span></div>
+      <label class="color-pick" title="Your color">Your color <input type="color" id="my-color" value="${esc(me?.color || '#6366f1')}"></label></div>
+    <p class="muted small sync-line"><i class="sync-dot ${st.state}"></i> ${esc(SYNC_LABEL[st.state])} · last sync ${esc(last)}${st.error ? `<br>${esc(st.error)}` : ''}</p>
+    <div class="btn-row">
+      <button class="btn" data-team="sync">Sync now</button>
+      <button class="btn ghost" data-team="logout">Sign out</button>
+    </div>`;
+}
+
+function showAuth(message = '') {
+  $('#auth-error').textContent = message;
+  $('#auth-error').hidden = !message;
+  $('#auth-screen').hidden = false;
+}
+const hideAuth = () => { $('#auth-screen').hidden = true; };
+
+function onSyncStatus(status) {
+  team.status = status;
+  renderTeamButton();
+  if (settingsSheet.open) renderTeamSettings();
+}
+
+function ensureMember(account) {
+  const me = store.member(account.id);
+  if (me && me.name === account.name && me.email === account.email) return;
+  const used = new Set(store.state.members.filter((m) => m.id !== account.id).map((m) => m.color));
+  const color = me?.color || MEMBER_COLORS.find((c) => !used.has(c)) || MEMBER_COLORS[store.state.members.length % MEMBER_COLORS.length];
+  store.upsertMember({ id: account.id, name: account.name, email: account.email, color });
+}
+
+// After the first sign-in, offer to move the tasks kept on this device into the team space.
+async function offerLocalImport(account) {
+  const offered = store.settings.importOffered || {};
+  if (offered[account.id]) return;
+  store.saveSettings({ importOffered: { ...offered, [account.id]: true } });
+  const local = store.localData();
+  const open = local.tasks.filter((t) => t.status !== 'archived');
+  if (!open.length && !local.projects.length) return;
+  const ok = await ask({
+    title: 'Bring your tasks along?',
+    message: `This device has ${open.length} task${open.length === 1 ? '' : 's'} and ${local.projects.length} project${local.projects.length === 1 ? '' : 's'} from before. Move them into the team space? Tasks stay yours; projects become visible to the team.`,
+    okLabel: 'Move them',
+  });
+  if (!ok) return;
+  store.importData({ projects: local.projects.map((p) => ({ ...p, createdBy: account.id })), tasks: open.map((t) => ({ ...t, ownerId: account.id })) }, 'merge');
+  toast('Tasks moved to the team space');
+}
+
+async function startTeam(account) {
+  team.account = account;
+  const key = `eisenhower.team.${account.tenantId || 'tenant'}.${account.id}`;
+  if (store.meId !== account.id) store.useTeam({ meId: account.id, storageKey: key });
+  store.saveSettings({ teamKey: key, teamMe: account.id, localOnly: false });
+  hideAuth();
+  team.sync?.stopPolling();
+  team.sync = new TeamSync(team.remote, { onStatus: onSyncStatus });
+  renderTeamButton();
+  await team.sync.syncNow();
+  ensureMember(account);
+  await offerLocalImport(account);
+  team.sync.startPolling();
+  render();
+}
+
+async function initTeam() {
+  const remote = await createRemote().catch((e) => {
+    console.warn('Team mode unavailable', e);
+    return null;
+  });
+  if (!remote) return;
+  team.remote = remote;
+  renderTeamButton();
+  let account = null;
+  try {
+    account = await remote.init();
+  } catch (e) {
+    console.warn('Sign-in failed', e);
+    // Offline with a cached session: keep working on the cached team data.
+    if (store.meId) return onSyncStatus({ ...team.status, state: 'offline', error: e.message });
+    return showAuth(`Sign-in failed: ${e.message}`);
+  }
+  if (account) return startTeam(account);
+  if (store.meId) {
+    store.saveSettings({ teamKey: null, teamMe: null });
+    store.useTeam(null);
+  }
+  renderTeamButton();
+  if (!store.settings.localOnly) showAuth();
+}
+
+async function teamAction(action) {
+  switch (action) {
+    case 'login':
+      try {
+        await team.remote.login(); // Microsoft: navigates away and comes back signed in
+        const account = team.remote.account();
+        if (account) await startTeam(account);
+      } catch (e) {
+        showAuth(`Sign-in failed: ${e.message}`);
+      }
+      settingsSheet.close();
+      break;
+    case 'local':
+      store.saveSettings({ localOnly: true });
+      hideAuth();
+      break;
+    case 'sync':
+      await team.sync?.syncNow();
+      toast(team.status.state === 'ok' ? 'Up to date' : SYNC_LABEL[team.status.state]);
+      break;
+    case 'logout': {
+      const unsent = team.sync?.hasLocalChanges();
+      const ok = await ask({
+        title: 'Sign out?',
+        message: unsent ? 'Some changes have not been sent yet. They are kept on this device and sent the next time you sign in.' : 'Your team data stays in Microsoft 365. This device switches back to local mode.',
+        okLabel: 'Sign out',
+      });
+      if (!ok) return;
+      team.sync?.stopPolling();
+      team.sync = null;
+      store.saveSettings({ teamKey: null, teamMe: null });
+      store.useTeam(null);
+      settingsSheet.close();
+      renderTeamButton();
+      await team.remote.logout();
+      showAuth();
+      break;
+    }
+  }
+}
+
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('[data-team]');
+  if (btn) teamAction(btn.dataset.team);
+});
+document.addEventListener('change', (e) => {
+  if (e.target.id === 'my-color' && meId()) {
+    store.upsertMember({ ...store.member(meId()), color: e.target.value });
+    renderTeamButton();
+    renderTeamSettings();
+  }
+});
+$('#btn-team').addEventListener('click', () => (meId() ? openSettings() : showAuth()));
+
+// Push local edits shortly after they happen; pull on resume and when the network returns.
+store.subscribe(() => {
+  if (team.sync?.hasLocalChanges()) team.sync.schedulePush();
+});
+window.addEventListener('online', () => team.sync?.syncNow());
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') team.sync?.syncNow();
+});
+
 // ---------- Boot ----------
 
 $('#fab').addEventListener('click', () => {
   openEditor(null, { projectId: ['all', 'none'].includes(ui.projectFilter) ? null : ui.projectFilter });
 });
 
-store.subscribe(() => render());
+// Re-render on data changes, but not while the user is typing in an inline field (sync could arrive mid-typing).
+let renderDeferred = false;
+const typingInMain = () => {
+  const a = document.activeElement;
+  return Boolean(a?.closest('#main') && a.matches('input:not([type=checkbox]):not([type=color]), textarea, select'));
+};
+store.subscribe(() => {
+  if (typingInMain()) {
+    renderDeferred = true;
+    return;
+  }
+  render();
+});
+document.addEventListener('focusout', () => setTimeout(() => {
+  if (renderDeferred && !typingInMain()) {
+    renderDeferred = false;
+    render();
+  }
+}, 0));
 matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme);
 
 let lastDay = todayISO();
@@ -867,9 +1214,15 @@ document.addEventListener('focusin', (e) => {
   }
 });
 
+// Start on the cached team data right away (works offline); sign-in is verified in the background.
+if (store.settings.teamKey && store.settings.teamMe && (teamConfigured || window.__EISENHOWER_REMOTE__)) {
+  store.useTeam({ meId: store.settings.teamMe, storageKey: store.settings.teamKey });
+}
+
 applyTheme();
 render();
 checkReminders();
+initTeam();
 
 if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   const hadController = Boolean(navigator.serviceWorker.controller);

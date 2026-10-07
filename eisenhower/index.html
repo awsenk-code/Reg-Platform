@@ -19,6 +19,7 @@
   <header class="topbar">
     <h1 class="topbar-title" id="view-title">Matrix</h1>
     <div class="topbar-actions">
+      <button class="icon-btn team-btn" id="btn-team" hidden></button>
       <button class="icon-btn" id="btn-theme" aria-label="Toggle theme" title="Toggle theme">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9Z"/></svg>
       </button>
@@ -30,6 +31,7 @@
 
   <main id="main">
     <section class="view" id="view-matrix" data-title="Matrix">
+      <div class="filters" id="person-filters" role="toolbar" aria-label="Filter by person" hidden></div>
       <div class="filters" id="matrix-filters" role="toolbar" aria-label="Filter by project"></div>
       <div class="matrix" id="matrix"></div>
       <p class="hint">Rate tasks by importance and urgency, or drag them by the handle to another quadrant.</p>
@@ -80,6 +82,13 @@
           <span>Project</span>
           <select name="projectId"></select>
         </label>
+        <div id="team-fields" class="team-fields" hidden>
+          <label class="field">
+            <span>Owner</span>
+            <select name="ownerId"></select>
+          </label>
+          <label class="check private-check"><input type="checkbox" name="private"> 🔒 Private: only visible to me</label>
+        </div>
 
         <div class="scores">
           <label class="field">
@@ -110,7 +119,7 @@
         <div class="q-fields" data-q="3">
           <label class="field">
             <span>Delegate to</span>
-            <input name="delegatedTo" maxlength="100" autocomplete="off" placeholder="Name of person or team" list="people-list">
+            <input name="delegatedTo" maxlength="100" autocomplete="off" placeholder="Teammate or external person" list="people-list">
             <datalist id="people-list"></datalist>
           </label>
           <label class="field">
@@ -150,6 +159,7 @@
       </button>
     </div>
     <div class="sheet-body">
+      <section id="team-settings" hidden></section>
       <h3>Reminders</h3>
       <p class="muted">Get a notification when you open the app if tasks are due, overdue, or need a follow-up.</p>
       <button class="btn" id="btn-notifications">Enable notifications</button>
@@ -191,6 +201,20 @@
       </div>
     </form>
   </dialog>
+
+  <div class="auth" id="auth-screen" hidden>
+    <div class="auth-card">
+      <img src="icons/icon.svg" alt="" width="72" height="72">
+      <h2>Eisenhower Matrix</h2>
+      <p>Prioritize together: shared projects, your own matrix, and tasks you can hand to teammates.</p>
+      <button class="btn primary big" data-team="login">
+        <svg viewBox="0 0 24 24" aria-hidden="true" class="ms"><rect x="2" y="2" width="9" height="9" fill="#f25022" stroke="none"/><rect x="13" y="2" width="9" height="9" fill="#7fba00" stroke="none"/><rect x="2" y="13" width="9" height="9" fill="#00a4ef" stroke="none"/><rect x="13" y="13" width="9" height="9" fill="#ffb900" stroke="none"/></svg>
+        Sign in with Microsoft
+      </button>
+      <p class="auth-error" id="auth-error" role="alert" hidden></p>
+      <button class="btn ghost" data-team="local">Use on this device only</button>
+    </div>
+  </div>
 
   <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
