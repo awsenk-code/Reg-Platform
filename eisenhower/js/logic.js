@@ -112,8 +112,27 @@ export function sortTasks(tasks, today = new Date()) {
 
 // --- Derived actions ("Maßnahmen") ---
 
+// --- Team ownership ---
+
+// In team mode every task has an owner; tasks without one (local mode) belong to the current user.
+export function ownsTask(task, meId = null) {
+  return !meId || !task.ownerId || task.ownerId === meId;
+}
+
+// A task I handed to a teammate: it lives in their matrix, I only follow up on it.
+export function isDelegatedAway(task, meId = null) {
+  return Boolean(meId && task.delegatedById === meId && task.ownerId && task.ownerId !== meId);
+}
+
 // Returns the concrete next step for a task given its quadrant and state.
-export function nextAction(task, today = new Date()) {
+// ctx = { meId, nameOf(id) } adds team awareness for tasks delegated to teammates.
+export function nextAction(task, today = new Date(), ctx = {}) {
+  if (isDelegatedAway(task, ctx.meId)) {
+    const who = ctx.nameOf?.(task.ownerId) || 'teammate';
+    const fu = daysUntil(task.followUpDate, today);
+    if (fu !== null && fu <= 0) return { type: 'followup', label: `Follow up with ${who}` };
+    return { type: 'waiting', label: `Waiting for ${who}` };
+  }
   const { quadrant } = classify(task, today);
   const due = daysUntil(task.dueDate, today);
   switch (quadrant) {
@@ -136,10 +155,17 @@ export function nextAction(task, today = new Date()) {
 }
 
 // Groups open tasks into the action lists shown on the Actions screen.
-export function buildActionPlan(tasks, today = new Date()) {
+// With meId (team mode) only my own tasks plus the ones I delegated to teammates are included.
+export function buildActionPlan(tasks, today = new Date(), meId = null) {
   const todayISO = toISODate(today);
   const plan = { doNow: [], toSchedule: [], scheduledToday: [], upcoming: [], toDelegate: [], followUps: [], waiting: [], toEliminate: [] };
   for (const task of openTasks(tasks)) {
+    if (isDelegatedAway(task, meId)) {
+      if (task.followUpDate && task.followUpDate <= todayISO) plan.followUps.push(task);
+      else plan.waiting.push(task);
+      continue;
+    }
+    if (!ownsTask(task, meId)) continue;
     const { quadrant } = classify(task, today);
     if (quadrant === 1) plan.doNow.push(task);
     else if (quadrant === 2) {
@@ -200,10 +226,15 @@ export function projectProgress(tasks, projectId) {
 }
 
 // Tasks needing a reminder: due today/overdue, or a follow-up is due.
-export function dueReminders(tasks, today = new Date()) {
+export function dueReminders(tasks, today = new Date(), meId = null) {
   const todayISO = toISODate(today);
   const out = [];
   for (const t of openTasks(tasks)) {
+    if (isDelegatedAway(t, meId)) {
+      if (t.followUpDate && t.followUpDate <= todayISO) out.push({ task: t, kind: 'followup' });
+      continue;
+    }
+    if (!ownsTask(t, meId)) continue;
     if (t.dueDate && t.dueDate <= todayISO) out.push({ task: t, kind: t.dueDate < todayISO ? 'overdue' : 'due' });
     if (t.delegatedTo && t.followUpDate && t.followUpDate <= todayISO) out.push({ task: t, kind: 'followup' });
     if (t.scheduledDate === todayISO) out.push({ task: t, kind: 'scheduled' });
@@ -262,6 +293,13 @@ export function tasksToICS(tasks, now = new Date()) {
   return lines.join('\r\n');
 }
 
+// Sync bookkeeping: last change time and the SharePoint list item id (team mode only).
+function meta(r) {
+  const out = { updatedAt: r.updatedAt || r.createdAt || new Date(0).toISOString() };
+  if (r._sp) out._sp = String(r._sp);
+  return out;
+}
+
 // Validates and normalizes an imported backup. Throws on invalid input.
 export function normalizeBackup(data) {
   if (!data || typeof data !== 'object' || !Array.isArray(data.tasks) || !Array.isArray(data.projects)) {
@@ -273,7 +311,15 @@ export function normalizeBackup(data) {
   };
   const projects = data.projects
     .filter((p) => p && p.id && p.name)
-    .map((p) => ({ id: String(p.id), name: String(p.name), color: p.color || '#6366f1', createdAt: p.createdAt || new Date().toISOString(), archived: Boolean(p.archived) }));
+    .map((p) => ({
+      id: String(p.id),
+      name: String(p.name),
+      color: p.color || '#6366f1',
+      createdAt: p.createdAt || new Date().toISOString(),
+      createdBy: p.createdBy || null,
+      archived: Boolean(p.archived),
+      ...meta(p),
+    }));
   const tasks = data.tasks
     .filter((t) => t && t.id && t.title)
     .map((t) => ({
@@ -292,6 +338,13 @@ export function normalizeBackup(data) {
       status: ['open', 'done', 'archived'].includes(t.status) ? t.status : 'open',
       createdAt: t.createdAt || new Date().toISOString(),
       completedAt: t.completedAt || null,
+      ownerId: t.ownerId || null,
+      delegatedById: t.delegatedById || null,
+      private: Boolean(t.private),
+      ...meta(t),
     }));
-  return { version: 1, projects, tasks };
+  const members = (Array.isArray(data.members) ? data.members : [])
+    .filter((m) => m && m.id && m.name)
+    .map((m) => ({ id: String(m.id), name: String(m.name), email: m.email ? String(m.email) : '', color: m.color || '#6366f1', ...meta(m) }));
+  return { version: 1, projects, tasks, members };
 }

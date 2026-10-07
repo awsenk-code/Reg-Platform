@@ -1,5 +1,5 @@
 // Offline-first service worker: serves the app shell from cache and refreshes it in the background.
-const CACHE = 'eisenhower-v2';
+const CACHE = 'eisenhower-v3';
 const ASSETS = [
   './',
   './index.html',
@@ -7,6 +7,10 @@ const ASSETS = [
   './js/app.js',
   './js/logic.js',
   './js/store.js',
+  './js/config.js',
+  './js/team/sync.js',
+  './js/team/graph.js',
+  './vendor/msal-browser.min.js',
   './manifest.webmanifest',
   './icons/icon.svg',
   './icons/icon-192.png',
