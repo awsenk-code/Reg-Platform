@@ -69,6 +69,40 @@ function toast(message, action) {
   toastTimer = setTimeout(() => { el.hidden = true; }, action ? 6000 : 2500);
 }
 
+// In-app replacement for confirm()/prompt(), which are unreliable in iOS home-screen apps.
+// Resolves to true/false, or to the entered string (null when cancelled) when `input` is given.
+function ask({ title, message = '', input = null, okLabel = 'OK', danger = false }) {
+  const dlg = $('#ask-dialog');
+  const field = $('#ask-form').elements.value;
+  $('#ask-title').textContent = title;
+  $('#ask-message').textContent = message;
+  $('#ask-message').hidden = !message;
+  $('#ask-field').hidden = input === null;
+  field.value = input ?? '';
+  const ok = $('#ask-ok');
+  ok.textContent = okLabel;
+  ok.classList.toggle('danger', danger);
+  ok.classList.toggle('primary', !danger);
+  dlg.returnValue = '';
+  return new Promise((resolve) => {
+    dlg.addEventListener('close', () => {
+      const confirmed = dlg.returnValue === 'ok';
+      resolve(input === null ? confirmed : confirmed ? field.value : null);
+    }, { once: true });
+    dlg.showModal();
+    if (input !== null) {
+      field.focus();
+      field.select();
+    } else ok.focus();
+  });
+}
+
+$('#ask-form').addEventListener('submit', (e) => {
+  e.preventDefault();
+  $('#ask-dialog').close('ok');
+});
+$('#ask-cancel').addEventListener('click', () => $('#ask-dialog').close('cancel'));
+
 const projectName = (id) => store.project(id)?.name || '';
 const projectColor = (id) => store.project(id)?.color || 'var(--muted)';
 
@@ -223,8 +257,10 @@ function renderProjects() {
     return `<li class="project ${expanded ? 'expanded' : ''}" data-project="${esc(p.id)}">
       <div class="project-head">
         <input type="color" value="${esc(p.color)}" class="color" aria-label="Project color" data-act="color">
-        <button class="project-name" data-act="toggle">${esc(p.name)}</button>
+        <button class="project-name" data-act="toggle" aria-expanded="${expanded}">${esc(p.name)} <span class="chev" aria-hidden="true">${expanded ? '▾' : '▸'}</span></button>
         <span class="muted small">${prog.done}/${prog.total}</span>
+        <button class="icon-btn small" data-act="rename" aria-label="Rename project" title="Rename"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
+        <button class="icon-btn small danger" data-act="delete" aria-label="Delete project" title="Delete"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg></button>
       </div>
       <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(prog.ratio * 100)}"><span style="width:${prog.ratio * 100}%;background:${esc(p.color)}"></span></div>
       <div class="mini-dist">${[1, 2, 3, 4].map((q) => `<span class="mini q${q}" title="${esc(QUADRANTS[q].name)}">Q${q} ${dist[q]}</span>`).join('')}</div>
@@ -232,8 +268,6 @@ function renderProjects() {
       <div class="btn-row">
         <button class="btn small primary" data-act="add">Add task</button>
         <button class="btn small" data-act="show">Show in matrix</button>
-        <button class="btn small" data-act="rename">Rename</button>
-        <button class="btn small danger ghost" data-act="delete">Delete</button>
       </div>` : ''}
     </li>`;
   };
@@ -579,13 +613,23 @@ function handleProjectAction(act, id) {
       ui.view = 'matrix';
       render();
       break;
-    case 'rename': {
-      const name = prompt('Project name', p.name);
-      if (name && name.trim()) store.updateProject(id, { name: name.trim() });
+    case 'rename':
+      ask({ title: 'Rename project', input: p.name, okLabel: 'Save' }).then((name) => {
+        if (name && name.trim()) store.updateProject(id, { name: name.trim() });
+      });
       break;
-    }
     case 'delete':
-      if (confirm(`Delete project "${p.name}"? Its tasks are kept without a project.`)) store.deleteProject(id);
+      ask({ title: 'Delete project?', message: `"${p.name}" will be removed. Its tasks are kept without a project.`, okLabel: 'Delete', danger: true }).then((ok) => {
+        if (!ok) return;
+        const taskIds = store.state.tasks.filter((t) => t.projectId === id).map((t) => t.id);
+        store.deleteProject(id);
+        toast(`Project "${p.name}" deleted`, {
+          label: 'Undo',
+          run: () => {
+            store.importData({ projects: [...store.state.projects, p], tasks: store.state.tasks.map((t) => (taskIds.includes(t.id) ? { ...t, projectId: id } : t)) });
+          },
+        });
+      });
       break;
   }
 }
@@ -691,7 +735,7 @@ $('#import-file').addEventListener('change', async (e) => {
   try {
     const data = JSON.parse(await file.text());
     const merge = $('#import-merge').checked;
-    if (!merge && !confirm('Replace all current data with this backup?')) return;
+    if (!merge && !(await ask({ title: 'Replace all data?', message: 'All current projects and tasks on this device will be replaced by the backup.', okLabel: 'Replace', danger: true }))) return;
     store.importData(data, merge ? 'merge' : 'replace');
     toast(`Imported ${data.tasks.length} tasks`);
     settingsSheet.close();
@@ -700,8 +744,8 @@ $('#import-file').addEventListener('change', async (e) => {
   }
 });
 
-$('#btn-clear').addEventListener('click', () => {
-  if (!confirm('Delete all projects and tasks on this device? Export a backup first if you might need them.')) return;
+$('#btn-clear').addEventListener('click', async () => {
+  if (!(await ask({ title: 'Delete all data?', message: 'All projects and tasks on this device will be deleted. Export a backup first if you might need them.', okLabel: 'Delete all', danger: true }))) return;
   store.clearAll();
   settingsSheet.close();
   toast('All data deleted');
@@ -804,11 +848,38 @@ document.addEventListener('visibilitychange', () => {
 const params = new URLSearchParams(location.search);
 if (['matrix', 'actions', 'projects', 'insights'].includes(params.get('view'))) ui.view = params.get('view');
 
+// Keep dialogs inside the visible area when the on-screen keyboard opens (iOS does not resize the layout viewport).
+function updateViewportVars() {
+  const vv = window.visualViewport;
+  if (!vv) return;
+  const kb = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+  document.documentElement.style.setProperty('--vvh', `${vv.height}px`);
+  document.documentElement.style.setProperty('--kb', `${kb}px`);
+}
+window.visualViewport?.addEventListener('resize', updateViewportVars);
+window.visualViewport?.addEventListener('scroll', updateViewportVars);
+updateViewportVars();
+
+// Bring the focused field into view inside a sheet once the keyboard is up.
+document.addEventListener('focusin', (e) => {
+  if (e.target.matches('dialog input, dialog textarea, dialog select')) {
+    setTimeout(() => e.target.scrollIntoView({ block: 'nearest' }), 300);
+  }
+});
+
 applyTheme();
 render();
 checkReminders();
 
 if ('serviceWorker' in navigator && location.protocol !== 'file:') {
-  navigator.serviceWorker.register('sw.js').catch((e) => console.warn('SW registration failed', e));
+  const hadController = Boolean(navigator.serviceWorker.controller);
+  navigator.serviceWorker.register('sw.js').then((reg) => reg.update()).catch((e) => console.warn('SW registration failed', e));
+  // Reload once when an updated service worker takes over, so fixes show up without reinstalling.
+  let reloaded = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!hadController || reloaded) return;
+    reloaded = true;
+    location.reload();
+  });
 }
 navigator.storage?.persist?.().catch(() => {});
