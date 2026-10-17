@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Jahresabschluss-Reader</title>
+  <meta name="description" content="Liest HGB-Jahresabschlüsse (Bilanz und GuV) aus PDF-Dateien und überträgt alle Werte in eine Excel-Tabelle. Läuft lokal im Browser.">
+  <meta name="theme-color" content="#1f3864">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <h1>Jahresabschluss-Reader</h1>
+      <p class="subtitle">HGB-Bilanz und GuV aus PDF in Excel übertragen. Die Dokumente werden ausschließlich lokal in Ihrem Browser verarbeitet.</p>
+    </div>
+    <div class="topbar-actions">
+      <label class="field-inline">Einheit im Export
+        <select id="unit">
+          <option value="1">EUR</option>
+          <option value="1000">TEUR</option>
+        </select>
+      </label>
+      <button class="btn primary" id="btn-export" disabled>Excel exportieren</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="card upload" id="dropzone" tabindex="0" aria-label="PDF-Dateien hochladen">
+      <svg viewBox="0 0 24 24" aria-hidden="true" class="upload-icon"><path d="M12 16V4m0 0-4 4m4-4 4 4M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>
+      <p><strong>Jahresabschluss-PDFs hier ablegen</strong> oder <button class="link" id="btn-pick" type="button">Dateien auswählen</button></p>
+      <p class="muted">Digitale PDFs und Scans (Texterkennung). Mehrere Dateien werden als Spalten nebeneinander übernommen.</p>
+      <label class="check"><input type="checkbox" id="force-ocr"> Texterkennung für alle Seiten erzwingen (bei fehlerhafter Textebene)</label>
+      <input type="file" id="file" accept="application/pdf,.pdf" multiple hidden>
+    </section>
+
+    <ul class="jobs" id="jobs" aria-live="polite"></ul>
+
+    <section id="review" hidden>
+      <div class="docs" id="docs"></div>
+
+      <div class="toolbar">
+        <div class="tabs" role="tablist">
+          <button role="tab" class="tab" data-tab="bilanz" aria-selected="true">Bilanz</button>
+          <button role="tab" class="tab" data-tab="guv" aria-selected="false">GuV</button>
+          <button role="tab" class="tab" data-tab="kennzahlen" aria-selected="false">Kennzahlen</button>
+          <button role="tab" class="tab" data-tab="pruefung" aria-selected="false">Prüfung <span class="badge" id="check-badge"></span></button>
+        </div>
+        <label class="check"><input type="checkbox" id="hide-empty" checked> Leere Positionen ausblenden</label>
+      </div>
+
+      <div class="legend">
+        <span><i class="sw pdf"></i>aus PDF</span>
+        <span><i class="sw calc"></i>berechnet</span>
+        <span><i class="sw edit"></i>korrigiert</span>
+        <span><i class="sw uncertain"></i>unsicher</span>
+        <span><i class="sw issue"></i>Summe weicht ab</span>
+      </div>
+
+      <div class="table-wrap" id="table"></div>
+      <p class="hint">Werte sind direkt editierbar (deutsches Zahlenformat, Beträge in EUR). Summen ohne eigenen Wert werden aus den Unterpositionen berechnet. Die Excel-Datei enthält immer die vollständige HGB-Gliederung.</p>
+    </section>
+  </main>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
